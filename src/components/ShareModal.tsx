@@ -26,6 +26,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, proposa
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<'linkedin' | 'twitter' | 'instagram'>('linkedin');
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen && !shareContent) {
@@ -69,6 +70,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, proposa
   const handleCopy = () => {
     if (!shareContent) return;
     copyShareContent(shareContent[selectedPlatform]);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const getPlatformIcon = (platform: string) => {
@@ -101,7 +104,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, proposa
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
           <div className="flex items-center space-x-3">
             <Share2 className="h-6 w-6 text-blue-600" />
@@ -115,7 +118,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, proposa
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {isGenerating ? (
             <div className="text-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
@@ -212,8 +215,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, proposa
                   onClick={handleCopy}
                   className="flex items-center justify-center space-x-2 px-6 py-3 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  <Copy className="h-5 w-5" />
-                  <span>Copy Content</span>
+                  {isCopied ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-5 w-5" />
+                      <span>Copy Content</span>
+                    </>
+                  )}
                 </button>
               </div>
 

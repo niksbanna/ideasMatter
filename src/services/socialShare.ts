@@ -84,15 +84,14 @@ const generateFallbackContent = (proposal: {
 };
 
 export const shareToLinkedIn = (content: SocialShareContent): void => {
-  const text = `${content.title}\n\n${content.description}\n\n${content.hashtags.join(' ')}`;
   const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(content.url)}&title=${encodeURIComponent(content.title)}&summary=${encodeURIComponent(content.description)}`;
   
   window.open(linkedInUrl, '_blank', 'width=600,height=600,scrollbars=yes,resizable=yes');
 };
 
 export const shareToTwitter = (content: SocialShareContent): void => {
-  const text = `${content.description}\n\n${content.hashtags.join(' ')}\n\n${content.url}`;
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  const text = `${content.title}\n\n${content.description}\n\n${content.hashtags.join(' ')}\n\n`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(content.url)}`;
   
   window.open(twitterUrl, '_blank', 'width=600,height=600,scrollbars=yes,resizable=yes');
 };
@@ -125,7 +124,7 @@ export const copyShareContent = (content: SocialShareContent): void => {
   const text = `${content.title}\n\n${content.description}\n\n${content.hashtags.join(' ')}\n\n${content.url}`;
   
   navigator.clipboard.writeText(text).then(() => {
-    alert('Share content copied to clipboard!');
+    console.log('Share content copied to clipboard');
   }).catch(() => {
     // Fallback for older browsers
     const textArea = document.createElement('textarea');
@@ -134,6 +133,5 @@ export const copyShareContent = (content: SocialShareContent): void => {
     textArea.select();
     document.execCommand('copy');
     document.body.removeChild(textArea);
-    alert('Share content copied to clipboard!');
   });
 };
