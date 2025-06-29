@@ -395,26 +395,6 @@ export const Explorer: React.FC = () => {
           )}
         </div>
 
-        {/* Welcome Video */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Welcome to IdeasMatter</h2>
-          <div className="aspect-video rounded-xl overflow-hidden bg-black">
-            <iframe 
-              width="100%" 
-              height="100%" 
-              src="https://www.youtube.com/embed/jqg6DZ3Njhw" 
-              title="Welcome to IdeasMatter" 
-              frameBorder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowFullScreen
-              className="w-full h-full"
-            ></iframe>
-          </div>
-          <p className="mt-4 text-slate-600 text-sm">
-            Learn how IdeasMatter works and how you can participate in shaping policies and discussions.
-          </p>
-        </div>
-
         {/* Results */}
         <div className="space-y-6">
           {filteredProposals.map((proposal) => (
