@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Share2, Bookmark, BookmarkCheck, User, Calendar, Tag, Volume2, Video, ArrowLeft, ExternalLink, LogIn, Clock, Heart, CheckCircle, X, Flag, Globe, Wallet } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Bookmark, BookmarkCheck, User, Calendar, Tag, Volume2, Video, ArrowLeft, ExternalLink, LogIn, Clock, Heart, CheckCircle, X, Flag, Globe, Wallet, Loader2 } from 'lucide-react';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { CommentSection } from '../components/CommentSection';
