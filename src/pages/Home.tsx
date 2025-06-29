@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   TrendingUp, 
@@ -25,7 +25,8 @@ import {
   Calendar,
   Tag,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ArrowRight
 } from 'lucide-react';
 import { getProposals, Proposal } from '../services/supabase';
 import { submitVote, getUserVote, toggleSave, isSaved } from '../services/interactions';
@@ -53,6 +54,9 @@ export const Home: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [votingStates, setVotingStates] = useState<Record<string, boolean>>({});
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  
+  const ideasSectionRef = useRef<HTMLDivElement>(null);
 
   const authenticated = isAuthenticated();
   const currentUser = getCurrentUser();
@@ -253,9 +257,52 @@ export const Home: React.FC = () => {
     { id: 'environment', label: 'Environment', count: feedItems.filter(i => i.category === 'Environment').length }
   ];
 
+  const scrollToIdeas = () => {
+    ideasSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto flex gap-6">
+      {/* Hero Section with Video */}
+      <div className="bg-gradient-to-br from-blue-900 to-indigo-900 text-white py-16 animate-fade-in">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Welcome to IdeasMatter – Where Every Idea Counts
+            </h1>
+            
+            <div className="relative aspect-video mb-8 rounded-xl overflow-hidden shadow-2xl border-4 border-white/20">
+              {!isVideoLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                </div>
+              )}
+              <iframe 
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/jqg6DZ3Njhw?rel=0"
+                title="IdeasMatter Introduction"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                onLoad={() => setIsVideoLoaded(true)}
+              ></iframe>
+            </div>
+            
+            <p className="text-xl text-blue-100 mb-8">
+              Watch how IdeasMatter empowers community voices with AI and blockchain technology.
+            </p>
+            
+            <button
+              onClick={scrollToIdeas}
+              className="bg-white text-blue-900 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 mx-auto"
+            >
+              <span>Get Started</span>
+              <ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto flex gap-6" ref={ideasSectionRef}>
         {/* Left Sidebar */}
         <div className="hidden lg:block w-80 py-6">
           <div className="sticky top-6 space-y-6">
