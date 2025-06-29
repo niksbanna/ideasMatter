@@ -1,7 +1,6 @@
 import React from 'react';
-import { ExternalLink, CheckCircle, Clock, AlertCircle, Shield, Loader2 } from 'lucide-react';
+import { ExternalLink, CheckCircle, Clock, AlertCircle, Shield } from 'lucide-react';
 import { getTransactionExplorerUrl } from '../services/algorand';
-import { getNodelyExplorerUrl, isNodelyConfigured } from '../services/nodelyAlgorand';
 
 interface BlockchainVoteStatusProps {
   isOnChain: boolean;
@@ -20,14 +19,10 @@ export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
   isLoading,
   error
 }) => {
-  const getExplorerUrl = (txId: string) => {
-    return isNodelyConfigured() ? getNodelyExplorerUrl(txId) : getTransactionExplorerUrl(txId);
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center space-x-2 text-sm text-blue-600">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Clock className="h-4 w-4 animate-pulse" />
         <span>Recording vote on blockchain...</span>
       </div>
     );
@@ -37,7 +32,7 @@ export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
     return (
       <div className="flex items-center space-x-2 text-sm text-red-600">
         <AlertCircle className="h-4 w-4" />
-        <span>Blockchain recording failed: {error}</span>
+        <span>Blockchain recording failed</span>
       </div>
     );
   }
@@ -74,7 +69,7 @@ export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
             </div>
             <div className="mt-2">
               <a
-                href={getExplorerUrl(txId)}
+                href={getTransactionExplorerUrl(txId)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-1 text-emerald-700 hover:text-emerald-800 transition-colors"

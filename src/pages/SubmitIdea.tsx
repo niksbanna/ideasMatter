@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { Send, Lightbulb, FileText, Loader2, CheckCircle, AlertCircle, Database, Bot, Shield, Eye, EyeOff, MessageSquare, Vote, Wallet } from 'lucide-react';
+import { Send, Lightbulb, FileText, Loader2, CheckCircle, AlertCircle, Database, Bot, Shield, Eye, EyeOff, MessageSquare, Vote } from 'lucide-react';
 import { generatePolicyDraft } from '../services/gemini';
 import { submitIdea, updateProposalDraft } from '../services/supabase';
 import { getCurrentUser } from '../services/auth';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { ideaValidationService, type ValidationResult } from '../services/ideaValidation';
-import { WalletConnect } from '../components/WalletConnect';
-import { submitProposalToBlockchain } from '../services/blockchainVoting';
-import { BlockchainProposalStatus } from '../components/BlockchainProposalStatus';
 
 export const SubmitIdea: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -21,15 +18,6 @@ export const SubmitIdea: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showValidationDetails, setShowValidationDetails] = useState(false);
-  
-  // Blockchain state
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [walletProvider, setWalletProvider] = useState<string | null>(null);
-  const [showWalletConnect, setShowWalletConnect] = useState(false);
-  const [isBlockchainSubmitting, setIsBlockchainSubmitting] = useState(false);
-  const [blockchainTxId, setBlockchainTxId] = useState<string | null>(null);
-  const [blockchainError, setBlockchainError] = useState<string | null>(null);
-  const [submittedProposalId, setSubmittedProposalId] = useState<string | null>(null);
 
   const categories = [
     'General',
@@ -86,11 +74,6 @@ export const SubmitIdea: React.FC = () => {
     return geminiKey && geminiKey !== 'your_gemini_api_key_here';
   };
 
-  const handleWalletChange = (address: string | null, provider: string | null) => {
-    setWalletAddress(address);
-    setWalletProvider(provider);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
@@ -120,8 +103,6 @@ export const SubmitIdea: React.FC = () => {
     setSubmissionStatus('idle');
     setErrorMessage('');
     setValidationResult(null);
-    setBlockchainError(null);
-    setBlockchainTxId(null);
 
     try {
       // Step 1: Validate the idea with AI
@@ -148,8 +129,6 @@ export const SubmitIdea: React.FC = () => {
         validation_reasons: validation.reasons,
         idea_type: ideaType
       });
-
-      setSubmittedProposalId(proposalId);
 
       if (!validation.isValid) {
         // Idea failed validation - saved as draft but not public
@@ -179,30 +158,6 @@ export const SubmitIdea: React.FC = () => {
         await updateProposalDraft(proposalId, null, 'active');
       }
 
-      // Step 4: Submit to blockchain if wallet is connected
-      if (walletAddress && ideaType === 'proposal') {
-        setIsBlockchainSubmitting(true);
-        try {
-          const blockchainResult = await submitProposalToBlockchain(
-            proposalId,
-            title.trim(),
-            description.trim(),
-            walletAddress
-          );
-          
-          if (blockchainResult.success && blockchainResult.txId) {
-            setBlockchainTxId(blockchainResult.txId);
-          } else if (blockchainResult.error) {
-            setBlockchainError(blockchainResult.error);
-          }
-        } catch (blockchainError) {
-          console.error('Error submitting to blockchain:', blockchainError);
-          setBlockchainError(blockchainError instanceof Error ? blockchainError.message : 'Unknown blockchain error');
-        } finally {
-          setIsBlockchainSubmitting(false);
-        }
-      }
-
       // Success!
       setSubmissionStatus('success');
       
@@ -214,10 +169,7 @@ export const SubmitIdea: React.FC = () => {
         setIdeaType('poll');
         setSubmissionStatus('idle');
         setValidationResult(null);
-        setSubmittedProposalId(null);
-        setBlockchainTxId(null);
-        setBlockchainError(null);
-      }, 5000);
+      }, 3000);
       
     } catch (error) {
       console.error('Error submitting idea:', error);
@@ -269,7 +221,7 @@ export const SubmitIdea: React.FC = () => {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">Share Your Idea</h1>
           <p className="text-xl text-slate-600">
@@ -331,19 +283,6 @@ export const SubmitIdea: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
-                {/* Blockchain Status */}
-                {submittedProposalId && blockchainTxId && (
-                  <div className="mt-4">
-                    <BlockchainProposalStatus
-                      isOnChain={true}
-                      txId={blockchainTxId}
-                      timestamp={Date.now()}
-                      isLoading={isBlockchainSubmitting}
-                      error={blockchainError}
-                    />
-                  </div>
-                )}
               </div>
             )}
 
@@ -533,54 +472,6 @@ export const SubmitIdea: React.FC = () => {
                 </div>
               </div>
 
-              {/* Blockchain Integration - Only for proposals */}
-              {ideaType === 'proposal' && (
-                <div className="border-t border-slate-200 pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
-                      <Wallet className="h-5 w-5" />
-                      <span>Blockchain Recording</span>
-                    </h3>
-                    {!walletAddress && (
-                      <button
-                        type="button"
-                        onClick={() => setShowWalletConnect(!showWalletConnect)}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        {showWalletConnect ? 'Hide Wallet' : 'Connect Wallet'}
-                      </button>
-                    )}
-                  </div>
-
-                  {showWalletConnect || walletAddress ? (
-                    <WalletConnect
-                      onWalletChange={handleWalletChange}
-                      currentAddress={walletAddress}
-                      currentProvider={walletProvider}
-                    />
-                  ) : (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-start space-x-3">
-                        <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <p className="text-blue-800 font-medium">Blockchain Recording (Optional)</p>
-                          <p className="text-blue-700 text-sm">
-                            Connect an Algorand wallet to record your proposal on the blockchain for transparency and immutability.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => setShowWalletConnect(true)}
-                            className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                          >
-                            Connect Wallet
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <button
                 type="submit"
                 disabled={isSubmitting || !canSubmit}
@@ -592,7 +483,6 @@ export const SubmitIdea: React.FC = () => {
                     <span>
                       {isValidating ? 'Validating Content...' : 
                        isGenerating ? 'Generating AI Draft...' : 
-                       isBlockchainSubmitting ? 'Recording on Blockchain...' :
                        'Submitting...'}
                     </span>
                   </>
@@ -634,41 +524,6 @@ export const SubmitIdea: React.FC = () => {
                           <span>"{example}"</span>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Blockchain Info - Only for proposals */}
-            {ideaType === 'proposal' && (
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-blue-500 rounded-full p-3">
-                    <Shield className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Blockchain Integration</h3>
-                    <p className="text-slate-700 leading-relaxed mb-4">
-                      Record your proposal on the Algorand blockchain for transparency, immutability, and verification.
-                    </p>
-                    <div className="space-y-2 text-sm text-slate-600">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
-                        <span>Transparent and verifiable record</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
-                        <span>Immutable timestamp of submission</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
-                        <span>Publicly auditable on Algorand explorer</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
-                        <span>Enhanced trust and credibility</span>
-                      </div>
                     </div>
                   </div>
                 </div>
