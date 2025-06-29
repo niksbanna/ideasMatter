@@ -56,7 +56,7 @@ export const submitVote = async (
     };
   } catch (error) {
     console.error('Error submitting vote:', error);
-    throw new Error('Failed to submit vote');
+    throw error;
   }
 };
 

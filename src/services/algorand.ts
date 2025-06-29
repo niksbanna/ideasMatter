@@ -155,60 +155,6 @@ export const formatAlgoAmount = (microAlgos: number): string => {
   return (microAlgos / 1000000).toFixed(6) + ' ALGO';
 };
 
-// Wallet integration utilities
-export const connectWallet = async (): Promise<{ address: string; provider: string } | null> => {
-  try {
-    // Check if Pera Wallet is available
-    if (typeof window !== 'undefined' && (window as any).PeraWallet) {
-      const peraWallet = (window as any).PeraWallet;
-      const accounts = await peraWallet.connect();
-      if (accounts.length > 0) {
-        return {
-          address: accounts[0],
-          provider: 'Pera Wallet'
-        };
-      }
-    }
-    
-    // Check if Defly is available
-    if (typeof window !== 'undefined' && (window as any).DeflyWalletConnect) {
-      const deflyWallet = (window as any).DeflyWalletConnect;
-      const accounts = await deflyWallet.connect();
-      if (accounts.length > 0) {
-        return {
-          address: accounts[0],
-          provider: 'Defly'
-        };
-      }
-    }
-    
-    // Fallback: generate temporary account for demo
-    const account = generateAccount();
-    return {
-      address: account.addr,
-      provider: 'Demo Account'
-    };
-  } catch (error) {
-    console.error('Error connecting wallet:', error);
-    return null;
-  }
-};
-
-export const disconnectWallet = async (): Promise<void> => {
-  try {
-    if (typeof window !== 'undefined') {
-      if ((window as any).PeraWallet) {
-        await (window as any).PeraWallet.disconnect();
-      }
-      if ((window as any).DeflyWalletConnect) {
-        await (window as any).DeflyWalletConnect.disconnect();
-      }
-    }
-  } catch (error) {
-    console.error('Error disconnecting wallet:', error);
-  }
-};
-
 // Demo account for testing (DO NOT use in production)
 export const createDemoAccount = (): algosdk.Account => {
   // Generate a new account for demo purposes
@@ -216,7 +162,7 @@ export const createDemoAccount = (): algosdk.Account => {
   
   // In a real application, you would fund this account through TestNet faucet
   console.log('Demo account created:', account.addr);
-  console.log('Fund this account at: https://testnet.algoexplorer.io/dispenser');
+  console.log('Fund this account at: https://bank.testnet.algorand.network/');
   
   return account;
 };

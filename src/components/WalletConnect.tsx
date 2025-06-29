@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { 
-  connectWallet, 
-  disconnectWallet, 
   getAccountBalance, 
   formatAlgoAmount, 
   isValidAddress,
   createDemoAccount
 } from '../services/algorand';
+import { PeraWalletConnect } from '@perawallet/connect';
+import { DeflyWalletConnect } from '@blockshake/defly-connect';
+import { initializeDemoAccount } from '../services/blockchainVoting';
+import { getCurrentUser } from '../services/auth';
 
 interface WalletConnectProps {
   onWalletChange: (address: string | null, provider: string | null) => void;
@@ -25,12 +27,31 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [peraWallet] = useState(() => new PeraWalletConnect());
+  const [deflyWallet] = useState(() => new DeflyWalletConnect());
+  
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
     if (currentAddress) {
       loadBalance();
     }
-  }, [currentAddress]);
+    
+    // Set up wallet disconnect listeners
+    const peraDisconnectListener = peraWallet.connector?.on('disconnect', () => {
+      onWalletChange(null, null);
+    });
+    
+    const deflyDisconnectListener = deflyWallet.connector?.on('disconnect', () => {
+      onWalletChange(null, null);
+    });
+    
+    return () => {
+      // Clean up listeners
+      if (peraDisconnectListener) peraWallet.connector?.off('disconnect', peraDisconnectListener);
+      if (deflyDisconnectListener) deflyWallet.connector?.off('disconnect', deflyDisconnectListener);
+    };
+  }, [currentAddress, peraWallet, deflyWallet]);
 
   const loadBalance = async () => {
     if (!currentAddress) return;
@@ -46,15 +67,29 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
     }
   };
 
-  const handleConnect = async () => {
+  const handleConnectPera = async () => {
     setIsConnecting(true);
     try {
-      const wallet = await connectWallet();
-      if (wallet) {
-        onWalletChange(wallet.address, wallet.provider);
+      const accounts = await peraWallet.connect();
+      if (accounts && accounts.length > 0) {
+        onWalletChange(accounts[0], 'Pera Wallet');
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error);
+      console.error('Error connecting Pera wallet:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleConnectDefly = async () => {
+    setIsConnecting(true);
+    try {
+      const accounts = await deflyWallet.connect();
+      if (accounts && accounts.length > 0) {
+        onWalletChange(accounts[0], 'Defly Wallet');
+      }
+    } catch (error) {
+      console.error('Error connecting Defly wallet:', error);
     } finally {
       setIsConnecting(false);
     }
@@ -62,7 +97,11 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
 
   const handleDisconnect = async () => {
     try {
-      await disconnectWallet();
+      if (currentProvider === 'Pera Wallet') {
+        await peraWallet.disconnect();
+      } else if (currentProvider === 'Defly Wallet') {
+        await deflyWallet.disconnect();
+      }
       onWalletChange(null, null);
       setBalance(0);
     } catch (error) {
@@ -71,7 +110,9 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
   };
 
   const handleCreateDemo = () => {
-    const demoAccount = createDemoAccount();
+    if (!currentUser) return;
+    
+    const demoAccount = initializeDemoAccount(currentUser.id);
     onWalletChange(demoAccount.addr, 'Demo Account');
   };
 
@@ -190,7 +231,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
                 <p className="font-medium">Demo Account</p>
                 <p>Fund this account at the TestNet faucet to enable blockchain voting.</p>
                 <a
-                  href="https://testnet.algoexplorer.io/dispenser"
+                  href="https://bank.testnet.algorand.network/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-amber-700 underline hover:text-amber-900"
@@ -219,7 +260,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
 
         <div className="space-y-3">
           <button
-            onClick={handleConnect}
+            onClick={handleConnectPera}
             disabled={isConnecting}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
           >
@@ -230,8 +271,34 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
               </>
             ) : (
               <>
-                <Wallet className="h-5 w-5" />
-                <span>Connect Wallet</span>
+                <img 
+                  src="https://perawallet.app/favicon.ico" 
+                  alt="Pera Wallet" 
+                  className="h-5 w-5"
+                />
+                <span>Connect Pera Wallet</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleConnectDefly}
+            disabled={isConnecting}
+            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+          >
+            {isConnecting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Connecting...</span>
+              </>
+            ) : (
+              <>
+                <img 
+                  src="https://defly.app/favicon.ico" 
+                  alt="Defly Wallet" 
+                  className="h-5 w-5"
+                />
+                <span>Connect Defly Wallet</span>
               </>
             )}
           </button>
@@ -250,7 +317,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
         </div>
 
         <div className="mt-6 text-xs text-slate-500 space-y-2">
-          <p>Supported wallets: Pera Wallet, Defly, or Demo Account</p>
+          <p>No wallet? Create a demo account for testing</p>
           <p>Votes are recorded on Algorand TestNet for demonstration</p>
         </div>
       </div>
