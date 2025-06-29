@@ -123,9 +123,8 @@ export const Admin: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      // Get total counts
-      const [usersCount, proposalsCount, votesCount, commentsCount, reportsCount] = await Promise.all([
-        supabase.from('auth.users').select('id', { count: 'exact', head: true }),
+      // Get total counts from accessible tables
+      const [proposalsCount, votesCount, commentsCount, reportsCount] = await Promise.all([
         supabase.from('proposals').select('id', { count: 'exact', head: true }),
         supabase.from('proposal_votes').select('id', { count: 'exact', head: true }),
         supabase.from('proposal_comments').select('id', { count: 'exact', head: true }),
@@ -146,21 +145,28 @@ export const Admin: React.FC = () => {
 
       // Get today's stats
       const today = new Date().toISOString().split('T')[0];
-      const [todayUsers, todayProposals, todayVotes] = await Promise.all([
-        supabase.from('auth.users').select('id', { count: 'exact', head: true }).gte('created_at', today),
+      const [todayProposals, todayVotes] = await Promise.all([
         supabase.from('proposals').select('id', { count: 'exact', head: true }).gte('created_at', today),
         supabase.from('proposal_votes').select('id', { count: 'exact', head: true }).gte('created_at', today)
       ]);
 
+      // Estimate user count from unique user_ids in proposals
+      const { data: uniqueUsers } = await supabase
+        .from('proposals')
+        .select('user_id')
+        .not('user_id', 'is', null);
+
+      const estimatedUserCount = uniqueUsers ? new Set(uniqueUsers.map(u => u.user_id)).size : 0;
+
       setStats({
-        totalUsers: usersCount.count || 0,
+        totalUsers: estimatedUserCount, // Estimated from proposals
         totalProposals: proposalsCount.count || 0,
         totalVotes: votesCount.count || 0,
         totalComments: commentsCount.count || 0,
         totalReports: reportsCount.count || 0,
         activeProposals: activeCount || 0,
         pendingReports: pendingReports || 0,
-        todaySignups: todayUsers.count || 0,
+        todaySignups: 0, // Cannot access auth.users from client
         todayProposals: todayProposals.count || 0,
         todayVotes: todayVotes.count || 0
       });
@@ -171,17 +177,14 @@ export const Admin: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      const { data, error } = await supabase.auth.admin.listUsers();
-      if (error) throw error;
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error('Error loading users:', error);
-      // Fallback: try to get user data from proposals
-      const { data } = await supabase
+      // Since we can't access auth.users directly, we'll create a user list from proposals
+      const { data, error } = await supabase
         .from('proposals')
         .select('user_id, author_name, created_at')
         .not('user_id', 'is', null);
       
+      if (error) throw error;
+
       if (data) {
         const uniqueUsers = data.reduce((acc, proposal) => {
           if (!acc.find(u => u.id === proposal.user_id)) {
@@ -189,13 +192,16 @@ export const Admin: React.FC = () => {
               id: proposal.user_id,
               email: `${proposal.author_name.toLowerCase().replace(/\s+/g, '')}@example.com`,
               created_at: proposal.created_at,
-              user_metadata: { full_name: proposal.author_name }
+              user_metadata: { full_name: proposal.author_name },
+              email_confirmed_at: proposal.created_at // Assume confirmed
             });
           }
           return acc;
         }, [] as User[]);
         setUsers(uniqueUsers);
       }
+    } catch (error) {
+      console.error('Error loading users:', error);
     }
   };
 
@@ -230,8 +236,7 @@ export const Admin: React.FC = () => {
         .from('reports')
         .select(`
           *,
-          proposals!inner(title),
-          auth.users!inner(email)
+          proposals!inner(title)
         `)
         .order('created_at', { ascending: false });
 
@@ -240,7 +245,7 @@ export const Admin: React.FC = () => {
       const reportsWithDetails = data?.map(report => ({
         ...report,
         proposal_title: report.proposals?.title || 'Unknown',
-        reporter_email: report.auth?.users?.email || 'Unknown'
+        reporter_email: 'Unknown' // Cannot access auth.users from client
       })) || [];
 
       setReports(reportsWithDetails);
@@ -428,9 +433,9 @@ export const Admin: React.FC = () => {
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-blue-600 font-medium text-sm">Total Users</p>
+                      <p className="text-blue-600 font-medium text-sm">Estimated Users</p>
                       <p className="text-3xl font-bold text-blue-900">{stats.totalUsers}</p>
-                      <p className="text-blue-700 text-sm">+{stats.todaySignups} today</p>
+                      <p className="text-blue-700 text-sm">Based on proposals</p>
                     </div>
                     <Users className="h-8 w-8 text-blue-600" />
                   </div>
@@ -560,6 +565,12 @@ export const Admin: React.FC = () => {
                 </div>
               </div>
 
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <p className="text-orange-800 text-sm">
+                  <strong>Note:</strong> User data is estimated from proposal submissions. Full user management requires server-side access to authentication records.
+                </p>
+              </div>
+
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -568,8 +579,7 @@ export const Admin: React.FC = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Joined</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Active</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">First Seen</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -588,25 +598,17 @@ export const Admin: React.FC = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{user.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{user.email}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.email_confirmed_at 
-                                ? 'bg-emerald-100 text-emerald-800' 
-                                : 'bg-orange-100 text-orange-800'
-                            }`}>
-                              {user.email_confirmed_at ? 'Verified' : 'Pending'}
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800">
+                              Estimated
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                             {new Date(user.created_at).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                            {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Never'}
-                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                            <button className="text-red-600 hover:text-red-900">Suspend</button>
                           </td>
                         </tr>
                       ))}
@@ -759,6 +761,12 @@ export const Admin: React.FC = () => {
                     <span>Export Reports</span>
                   </button>
                 </div>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <p className="text-orange-800 text-sm">
+                  <strong>Note:</strong> Reporter email information is not available due to client-side access limitations.
+                </p>
               </div>
 
               <div className="space-y-4">
