@@ -1,0 +1,376 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "shareIdea": "Partager une Idée",
+    "explore": "Explorer",
+    "dashboard": "Tableau de Bord",
+    "signIn": "Se Connecter",
+    "signUp": "S'inscrire"
+  },
+  "home": {
+    "hero": {
+      "title": "Chaque Idée",
+      "subtitle": "Mérite d'être Entendue",
+      "description": "Des questions simples aux propositions de politiques complexes - partagez vos pensées, engagez-vous avec la communauté et aidez à façonner la conversation sur les sujets qui comptent.",
+      "shareIdea": "Partagez votre Idée",
+      "exploreIdeas": "Explorer les Idées"
+    },
+    "howItWorks": {
+      "title": "Comment Fonctionne IdeasMatter",
+      "subtitle": "Des sondages simples aux politiques structurées",
+      "step1": {
+        "title": "1. Partager des Idées",
+        "description": "Partagez n'importe quoi, des questions amusantes comme \"Les céréales sont-elles une soupe ?\" aux propositions de politiques sérieuses. Chaque idée a de la valeur."
+      },
+      "step2": {
+        "title": "2. Amélioration par IA",
+        "description": "Pour les idées de politiques, notre IA crée des propositions structurées avec analyse des problèmes, solutions et plans d'implémentation."
+      },
+      "step3": {
+        "title": "3. Engagement Communautaire",
+        "description": "Votez, commentez et discutez des idées avec la communauté. Chaque voix contribue à la conversation."
+      }
+    },
+    "guestAccess": {
+      "title": "Pas de Connexion ? Pas de Problème !",
+      "subtitle": "Naviguez et découvrez des idées librement, engagez-vous quand vous êtes prêt",
+      "browseFreelyTitle": "Naviguer Librement",
+      "browseFreelySubtitle": "Aucun compte requis pour explorer",
+      "joinToEngageTitle": "Rejoignez pour Participer",
+      "joinToEngageSubtitle": "Inscrivez-vous pour participer pleinement",
+      "features": {
+        "readIdeas": "Lire toutes les idées et propositions",
+        "viewAiDrafts": "Voir les brouillons de politiques générés par IA",
+        "seeVotes": "Voir les comptes de votes et discussions",
+        "listenAudio": "Écouter les résumés audio",
+        "voteProposals": "Voter sur les propositions et sondages",
+        "commentDiscuss": "Commenter et discuter des idées",
+        "submitIdeas": "Soumettre vos propres idées",
+        "saveIdeas": "Sauvegarder des idées pour plus tard"
+      }
+    },
+    "ideaTypes": {
+      "title": "Tous les Types d'Idées sont les Bienvenus",
+      "subtitle": "Des sondages décontractés aux discussions de politiques sérieuses",
+      "communityPolls": {
+        "title": "Sondages Communautaires",
+        "subtitle": "Questions rapides et discussions amusantes",
+        "examples": {
+          "cereal": "\"Les céréales sont-elles une soupe ?\"",
+          "pizza": "\"Meilleure garniture de pizza ?\"",
+          "workWeek": "\"Devrions-nous avoir des semaines de travail de 4 jours ?\""
+        },
+        "features": {
+          "like": "J'aime",
+          "yesNo": "Oui/Non",
+          "comment": "Commenter"
+        }
+      },
+      "aiProposals": {
+        "title": "Propositions IA",
+        "subtitle": "Documents de politiques structurés",
+        "features": {
+          "problemAnalysis": "Analyse des problèmes",
+          "proposedSolutions": "Solutions proposées",
+          "implementationPlans": "Plans d'implémentation",
+          "upDown": "Haut/Bas",
+          "audioVideo": "Audio/Vidéo",
+          "discuss": "Discuter"
+        }
+      }
+    },
+    "categories": {
+      "title": "Explorer par Catégorie",
+      "subtitle": "Trouvez des idées qui vous intéressent"
+    },
+    "features": {
+      "title": "Fonctionnalités de la Plateforme",
+      "subtitle": "Conçue pour l'engagement et l'accessibilité",
+      "aiPowered": {
+        "title": "Alimenté par IA",
+        "description": "Transformez les idées en propositions structurées avec l'assistance IA"
+      },
+      "contentValidation": {
+        "title": "Validation du Contenu",
+        "description": "L'IA assure que tout le contenu respecte les standards de la communauté"
+      },
+      "openPlatform": {
+        "title": "Plateforme Ouverte",
+        "description": "Naviguez et votez sur les idées sans compte"
+      },
+      "communityDriven": {
+        "title": "Dirigé par la Communauté",
+        "description": "Chaque voix compte pour façonner la conversation"
+      }
+    },
+    "stats": {
+      "ideasWelcome": "Idées Bienvenues",
+      "communityActive": "Communauté Active",
+      "openTransparent": "Ouvert et Transparent"
+    }
+  },
+  "explorer": {
+    "title": "Explorer les Idées",
+    "subtitle": "Découvrez, discutez et votez sur les idées de la communauté",
+    "stats": {
+      "active": "Actif",
+      "proposals": "Propositions",
+      "polls": "Sondages"
+    },
+    "quickFilters": {
+      "allIdeas": "Toutes les Idées",
+      "trending": "Tendance",
+      "new": "Nouveau",
+      "civic": "Civique",
+      "fun": "Amusant",
+      "polls": "Sondages",
+      "proposals": "Propositions"
+    },
+    "filters": {
+      "searchPlaceholder": "Rechercher des idées, auteurs ou mots-clés...",
+      "allStatus": "Tous les Statuts",
+      "active": "Actif",
+      "completed": "Terminé",
+      "allTypes": "Tous les Types",
+      "polls": "Sondages",
+      "proposals": "Propositions",
+      "allCategories": "Toutes les Catégories"
+    },
+    "sorting": {
+      "newest": "Plus Récent",
+      "oldest": "Plus Ancien",
+      "mostVotes": "Plus de Votes",
+      "trending": "Tendance"
+    },
+    "noResults": {
+      "title": "Aucune idée trouvée",
+      "description": "Essayez d'ajuster votre recherche ou critères de filtre",
+      "shareFirst": "Partager la Première Idée"
+    },
+    "communityImpact": {
+      "title": "Impact Communautaire",
+      "totalIdeas": "Idées Totales",
+      "proposals": "Propositions",
+      "communityPolls": "Sondages Communautaires",
+      "contributors": "Contributeurs"
+    }
+  },
+  "submitIdea": {
+    "title": "Partagez votre Idée",
+    "subtitle": "Des questions simples aux propositions complexes - chaque idée compte et mérite d'être entendue.",
+    "ideaTypes": {
+      "question": "Quel type d'idée est-ce ?",
+      "communityPoll": {
+        "title": "Sondage / Idée Communautaire",
+        "description": "Partagez une idée, question ou opinion pour discussion communautaire"
+      },
+      "aiProposal": {
+        "title": "Proposition Rédigée par IA",
+        "description": "Créez une proposition de politique structurée avec assistance IA"
+      }
+    },
+    "form": {
+      "category": "Catégorie",
+      "titleLabel": "Titre de l'Idée",
+      "proposalTitleLabel": "Titre de la Proposition",
+      "titlePlaceholder": "ex., Les céréales sont-elles une soupe ? ou Devrions-nous avoir des semaines de travail de 4 jours ?",
+      "proposalTitlePlaceholder": "ex., Incitations à l'Énergie Renouvelable pour les Petites Entreprises",
+      "descriptionLabel": "Description et Contexte",
+      "detailedDescriptionLabel": "Description Détaillée",
+      "descriptionPlaceholder": "Fournissez le contexte de votre idée ou question. Pourquoi est-ce intéressant ? Quelles sont les différentes perspectives ? Qu'est-ce qui vous a fait penser à cela ?",
+      "proposalDescriptionPlaceholder": "Décrivez votre idée de politique en détail. Quel problème résout-elle ? Comment fonctionnerait-elle ? Qui en bénéficierait ? Incluez toute information de contexte ou recherche pertinente.",
+      "submitIdea": "Partager l'Idée",
+      "submitProposal": "Partager la Proposition",
+      "submitting": "Soumission...",
+      "validatingContent": "Validation du Contenu...",
+      "generatingDraft": "Génération du Brouillon IA..."
+    },
+    "success": {
+      "title": "Idée Soumise avec Succès !",
+      "proposalDescription": "Votre proposition de politique est maintenant en ligne et prête pour l'engagement communautaire.",
+      "ideaDescription": "Votre idée est maintenant en ligne et prête pour l'engagement communautaire."
+    },
+    "validation": {
+      "draftSaved": "Idée Sauvegardée comme Brouillon",
+      "needsReview": "Votre idée a été sauvegardée dans vos brouillons mais nécessite une révision avant de pouvoir être rendue publique.",
+      "validationScore": "Score de Validation :",
+      "showDetails": "Afficher les détails de validation",
+      "hideDetails": "Masquer les détails de validation",
+      "issuesFound": "Problèmes trouvés :",
+      "suggestions": "Suggestions d'amélioration :"
+    },
+    "guidelines": {
+      "title": "Directives de la Communauté",
+      "items": [
+        "Gardez les idées constructives et réfléchies",
+        "Respectez les points de vue et perspectives divers",
+        "Pas de discours de haine, harcèlement ou attaques personnelles",
+        "Pas de contenu inapproprié, sexuel ou offensant",
+        "Restez sur le sujet et contribuez de manière significative",
+        "Amusez-vous et soyez curieux des différentes idées !"
+      ]
+    }
+  },
+  "dashboard": {
+    "welcome": "Bon retour",
+    "subtitle": "Suivez vos soumissions, votes et impact sur l'engagement civique",
+    "stats": {
+      "ideasSubmitted": "Idées Soumises",
+      "totalVotes": "Votes Totaux",
+      "avgScore": "Score Moyen",
+      "activeProposals": "Propositions Actives"
+    },
+    "quickActions": {
+      "submitNew": {
+        "title": "Soumettre une Nouvelle Idée",
+        "description": "Partagez votre vision pour une meilleure gouvernance"
+      },
+      "explore": {
+        "title": "Explorer les Propositions",
+        "description": "Découvrez et votez sur les idées communautaires"
+      }
+    },
+    "myProposals": {
+      "title": "Mes Propositions",
+      "submitNew": "Soumettre Nouvelle →",
+      "created": "Créé :",
+      "votes": "votes",
+      "score": "Score :",
+      "view": "Voir",
+      "noProposals": {
+        "title": "Pas encore de propositions",
+        "description": "Commencez par soumettre votre première idée de politique",
+        "submitIdea": "Soumettre une Idée"
+      }
+    },
+    "actionPanel": {
+      "title": "Prêt à Faire la Différence ?",
+      "description": "Vos idées peuvent façonner l'avenir de la gouvernance. Soumettez de nouvelles propositions et engagez-vous avec la communauté pour conduire un changement positif.",
+      "submitNewIdea": "Soumettre une Nouvelle Idée",
+      "exploreProposals": "Explorer les Propositions"
+    }
+  },
+  "proposal": {
+    "backToExplorer": "Retour à l'Explorateur",
+    "originalIdea": "Idée Originale",
+    "description": "Description",
+    "generateAudio": "🔊 Générer Audio",
+    "listen": "🔊 Écouter",
+    "listenCached": "🔊 Écouter (En Cache)",
+    "watchExplainer": "🎥 Regarder l'Explication",
+    "report": "Signaler",
+    "by": "Par",
+    "score": "Score :",
+    "votes": "votes",
+    "save": "Sauvegarder",
+    "saved": "Sauvegardé",
+    "share": "Partager",
+    "yes": "Oui",
+    "no": "Non",
+    "pollResults": "Résultats du Sondage",
+    "totalVotes": "Votes totaux :",
+    "likes": "J'aime :",
+    "joinDiscussion": {
+      "title": "Voulez-vous participer à ceci",
+      "description": "Connectez-vous pour voter, commenter et sauvegarder les idées qui vous intéressent.",
+      "signIn": "Se Connecter"
+    },
+    "policyContent": {
+      "problemStatement": "Énoncé du Problème",
+      "proposedSolution": "Solution Proposée",
+      "expectedImpact": "Impact Attendu",
+      "implementationPlan": "Plan d'Implémentation"
+    },
+    "relatedIdeas": {
+      "title": "Idées Connexes",
+      "description": "Les idées connexes apparaîtront ici basées sur la catégorie et la similitude de contenu.",
+      "exploreAll": "Explorer toutes les idées"
+    }
+  },
+  "comments": {
+    "title": "Discussion",
+    "placeholder": "Partagez vos pensées sur cette proposition...",
+    "postComment": "Publier un Commentaire",
+    "posting": "Publication...",
+    "joinDiscussion": {
+      "title": "Rejoignez la discussion",
+      "description": "Connectez-vous pour partager vos pensées sur cette proposition.",
+      "signIn": "Se Connecter"
+    },
+    "noComments": {
+      "title": "Pas encore de commentaires",
+      "description": "Soyez le premier à partager vos pensées sur cette proposition !"
+    },
+    "justNow": "À l'instant",
+    "hoursAgo": "h il y a",
+    "daysAgo": "j il y a"
+  },
+  "auth": {
+    "welcomeBack": "Bon Retour",
+    "createAccount": "Créer un Compte",
+    "signInDescription": "Connectez-vous pour soumettre des idées et participer avec la communauté",
+    "signUpDescription": "Rejoignez IdeasMatter pour commencer à partager vos idées de politiques",
+    "fullName": "Nom Complet",
+    "emailAddress": "Adresse E-mail",
+    "password": "Mot de Passe",
+    "enterFullName": "Entrez votre nom complet",
+    "enterEmail": "Entrez votre e-mail",
+    "enterPassword": "Entrez votre mot de passe",
+    "passwordRequirement": "Le mot de passe doit contenir au moins 6 caractères",
+    "emailVerificationRequired": {
+      "title": "Vérification E-mail Requise",
+      "description": "Après avoir créé votre compte, vous devrez vérifier votre adresse e-mail avant de pouvoir vous connecter."
+    },
+    "signIn": "Se Connecter",
+    "createAccount": "Créer un Compte",
+    "signingIn": "Connexion...",
+    "creatingAccount": "Création du Compte...",
+    "dontHaveAccount": "Vous n'avez pas de compte ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "signUp": "S'inscrire",
+    "checkEmail": {
+      "title": "Vérifiez votre E-mail",
+      "accountCreated": "Compte Créé avec Succès !",
+      "verificationSent": "Nous avons envoyé un e-mail de vérification à :",
+      "beforeSignIn": "Avant de pouvoir vous connecter :",
+      "steps": [
+        "Vérifiez votre boîte de réception e-mail (et dossier spam)",
+        "Cliquez sur le lien de vérification dans l'e-mail",
+        "Revenez ici pour vous connecter avec vos identifiants"
+      ],
+      "continueToSignIn": "Continuer pour Se Connecter",
+      "didntReceive": "Vous n'avez pas reçu l'e-mail ?",
+      "getHelp": "Obtenir de l'Aide"
+    }
+  },
+  "footer": {
+    "description": "Autonomiser l'engagement civique grâce à la rédaction de politiques alimentée par IA et au vote blockchain.",
+    "technologyStack": "Stack Technologique",
+    "openSource": "Open Source",
+    "openSourceDescription": "Cette plateforme est construite avec la transparence et la communauté à l'esprit.",
+    "builtWith": "Construit avec Bolt.new",
+    "copyright": "Rendre la démocratie plus accessible et transparente."
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "tryAgain": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Sauvegarder",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "all": "Tous",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK"
+  }
+}

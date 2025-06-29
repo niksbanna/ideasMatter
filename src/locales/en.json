@@ -1,0 +1,376 @@
+{
+  "nav": {
+    "home": "Home",
+    "shareIdea": "Share Idea",
+    "explore": "Explore",
+    "dashboard": "Dashboard",
+    "signIn": "Sign In",
+    "signUp": "Sign Up"
+  },
+  "home": {
+    "hero": {
+      "title": "Every Idea",
+      "subtitle": "Deserves to be Heard",
+      "description": "From simple questions to complex policy proposals - share your thoughts, engage with the community, and help shape the conversation on topics that matter.",
+      "shareIdea": "Share Your Idea",
+      "exploreIdeas": "Explore Ideas"
+    },
+    "howItWorks": {
+      "title": "How IdeasMatter Works",
+      "subtitle": "From simple polls to structured policies",
+      "step1": {
+        "title": "1. Share Ideas",
+        "description": "Share anything from fun questions like \"Is cereal soup?\" to serious policy proposals. Every idea has value."
+      },
+      "step2": {
+        "title": "2. AI Enhancement",
+        "description": "For policy ideas, our AI creates structured proposals with problem analysis, solutions, and implementation plans."
+      },
+      "step3": {
+        "title": "3. Community Engagement",
+        "description": "Vote, comment, and discuss ideas with the community. Every voice contributes to the conversation."
+      }
+    },
+    "guestAccess": {
+      "title": "No Login? No Problem!",
+      "subtitle": "Browse and discover ideas freely, engage when you're ready",
+      "browseFreelyTitle": "Browse Freely",
+      "browseFreelySubtitle": "No account required to explore",
+      "joinToEngageTitle": "Join to Engage",
+      "joinToEngageSubtitle": "Sign up to participate fully",
+      "features": {
+        "readIdeas": "Read all ideas and proposals",
+        "viewAiDrafts": "View AI-generated policy drafts",
+        "seeVotes": "See vote counts and discussions",
+        "listenAudio": "Listen to audio summaries",
+        "voteProposals": "Vote on proposals and polls",
+        "commentDiscuss": "Comment and discuss ideas",
+        "submitIdeas": "Submit your own ideas",
+        "saveIdeas": "Save ideas for later"
+      }
+    },
+    "ideaTypes": {
+      "title": "All Types of Ideas Welcome",
+      "subtitle": "From casual polls to serious policy discussions",
+      "communityPolls": {
+        "title": "Community Polls",
+        "subtitle": "Quick questions and fun discussions",
+        "examples": {
+          "cereal": "\"Is cereal soup?\"",
+          "pizza": "\"Best pizza topping?\"",
+          "workWeek": "\"Should we have 4-day work weeks?\""
+        },
+        "features": {
+          "like": "Like",
+          "yesNo": "Yes/No",
+          "comment": "Comment"
+        }
+      },
+      "aiProposals": {
+        "title": "AI Proposals",
+        "subtitle": "Structured policy documents",
+        "features": {
+          "problemAnalysis": "Problem analysis",
+          "proposedSolutions": "Proposed solutions",
+          "implementationPlans": "Implementation plans",
+          "upDown": "Up/Down",
+          "audioVideo": "Audio/Video",
+          "discuss": "Discuss"
+        }
+      }
+    },
+    "categories": {
+      "title": "Explore by Category",
+      "subtitle": "Find ideas that interest you"
+    },
+    "features": {
+      "title": "Platform Features",
+      "subtitle": "Built for engagement and accessibility",
+      "aiPowered": {
+        "title": "AI-Powered",
+        "description": "Transform ideas into structured proposals with AI assistance"
+      },
+      "contentValidation": {
+        "title": "Content Validation",
+        "description": "AI ensures all content meets community standards"
+      },
+      "openPlatform": {
+        "title": "Open Platform",
+        "description": "Browse and vote on ideas without an account"
+      },
+      "communityDriven": {
+        "title": "Community Driven",
+        "description": "Every voice matters in shaping the conversation"
+      }
+    },
+    "stats": {
+      "ideasWelcome": "Ideas Welcome",
+      "communityActive": "Community Active",
+      "openTransparent": "Open & Transparent"
+    }
+  },
+  "explorer": {
+    "title": "Explore Ideas",
+    "subtitle": "Discover, discuss, and vote on ideas from the community",
+    "stats": {
+      "active": "Active",
+      "proposals": "Proposals",
+      "polls": "Polls"
+    },
+    "quickFilters": {
+      "allIdeas": "All Ideas",
+      "trending": "Trending",
+      "new": "New",
+      "civic": "Civic",
+      "fun": "Fun",
+      "polls": "Polls",
+      "proposals": "Proposals"
+    },
+    "filters": {
+      "searchPlaceholder": "Search ideas, authors, or keywords...",
+      "allStatus": "All Status",
+      "active": "Active",
+      "completed": "Completed",
+      "allTypes": "All Types",
+      "polls": "Polls",
+      "proposals": "Proposals",
+      "allCategories": "All Categories"
+    },
+    "sorting": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "mostVotes": "Most Votes",
+      "trending": "Trending"
+    },
+    "noResults": {
+      "title": "No ideas found",
+      "description": "Try adjusting your search or filter criteria",
+      "shareFirst": "Share the First Idea"
+    },
+    "communityImpact": {
+      "title": "Community Impact",
+      "totalIdeas": "Total Ideas",
+      "proposals": "Proposals",
+      "communityPolls": "Community Polls",
+      "contributors": "Contributors"
+    }
+  },
+  "submitIdea": {
+    "title": "Share Your Idea",
+    "subtitle": "From simple questions to complex proposals - every idea matters and deserves to be heard.",
+    "ideaTypes": {
+      "question": "What type of idea is this?",
+      "communityPoll": {
+        "title": "Community Poll / Idea",
+        "description": "Share an idea, question, or opinion for community discussion"
+      },
+      "aiProposal": {
+        "title": "AI Drafted Proposal",
+        "description": "Create a structured policy proposal with AI assistance"
+      }
+    },
+    "form": {
+      "category": "Category",
+      "titleLabel": "Idea Title",
+      "proposalTitleLabel": "Proposal Title",
+      "titlePlaceholder": "e.g., Is cereal soup? or Should we have 4-day work weeks?",
+      "proposalTitlePlaceholder": "e.g., Renewable Energy Incentives for Small Businesses",
+      "descriptionLabel": "Description & Context",
+      "detailedDescriptionLabel": "Detailed Description",
+      "descriptionPlaceholder": "Provide context for your idea or question. Why is this interesting? What are the different perspectives? What made you think of this?",
+      "proposalDescriptionPlaceholder": "Describe your policy idea in detail. What problem does it solve? How would it work? Who would it benefit? Include any relevant background information or research.",
+      "submitIdea": "Share Idea",
+      "submitProposal": "Share Proposal",
+      "submitting": "Submitting...",
+      "validatingContent": "Validating Content...",
+      "generatingDraft": "Generating AI Draft..."
+    },
+    "success": {
+      "title": "Idea Submitted Successfully!",
+      "proposalDescription": "Your policy proposal is now live and ready for community engagement.",
+      "ideaDescription": "Your idea is now live and ready for community engagement."
+    },
+    "validation": {
+      "draftSaved": "Idea Saved as Draft",
+      "needsReview": "Your idea has been saved to your drafts but needs review before it can be made public.",
+      "validationScore": "Validation Score:",
+      "showDetails": "Show validation details",
+      "hideDetails": "Hide validation details",
+      "issuesFound": "Issues found:",
+      "suggestions": "Suggestions for improvement:"
+    },
+    "guidelines": {
+      "title": "Community Guidelines",
+      "items": [
+        "Keep ideas constructive and thoughtful",
+        "Respect diverse viewpoints and perspectives",
+        "No hate speech, harassment, or personal attacks",
+        "No inappropriate, sexual, or offensive content",
+        "Stay on topic and contribute meaningfully",
+        "Have fun and be curious about different ideas!"
+      ]
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "subtitle": "Track your submissions, votes, and impact on civic engagement",
+    "stats": {
+      "ideasSubmitted": "Ideas Submitted",
+      "totalVotes": "Total Votes",
+      "avgScore": "Avg. Score",
+      "activeProposals": "Active Proposals"
+    },
+    "quickActions": {
+      "submitNew": {
+        "title": "Submit New Idea",
+        "description": "Share your vision for better governance"
+      },
+      "explore": {
+        "title": "Explore Proposals",
+        "description": "Discover and vote on community ideas"
+      }
+    },
+    "myProposals": {
+      "title": "My Proposals",
+      "submitNew": "Submit New →",
+      "created": "Created:",
+      "votes": "votes",
+      "score": "Score:",
+      "view": "View",
+      "noProposals": {
+        "title": "No proposals yet",
+        "description": "Start by submitting your first policy idea",
+        "submitIdea": "Submit Idea"
+      }
+    },
+    "actionPanel": {
+      "title": "Ready to Make a Difference?",
+      "description": "Your ideas can shape the future of governance. Submit new proposals and engage with the community to drive positive change.",
+      "submitNewIdea": "Submit New Idea",
+      "exploreProposals": "Explore Proposals"
+    }
+  },
+  "proposal": {
+    "backToExplorer": "Back to Explorer",
+    "originalIdea": "Original Idea",
+    "description": "Description",
+    "generateAudio": "🔊 Generate Audio",
+    "listen": "🔊 Listen",
+    "listenCached": "🔊 Listen (Cached)",
+    "watchExplainer": "🎥 Watch Explainer",
+    "report": "Report",
+    "by": "By",
+    "score": "Score:",
+    "votes": "votes",
+    "save": "Save",
+    "saved": "Saved",
+    "share": "Share",
+    "yes": "Yes",
+    "no": "No",
+    "pollResults": "Poll Results",
+    "totalVotes": "Total votes:",
+    "likes": "Likes:",
+    "joinDiscussion": {
+      "title": "Want to engage with this",
+      "description": "Sign in to vote, comment, and save ideas you're interested in.",
+      "signIn": "Sign In"
+    },
+    "policyContent": {
+      "problemStatement": "Problem Statement",
+      "proposedSolution": "Proposed Solution",
+      "expectedImpact": "Expected Impact",
+      "implementationPlan": "Implementation Plan"
+    },
+    "relatedIdeas": {
+      "title": "Related Ideas",
+      "description": "Related ideas will appear here based on category and content similarity.",
+      "exploreAll": "Explore all ideas"
+    }
+  },
+  "comments": {
+    "title": "Discussion",
+    "placeholder": "Share your thoughts on this proposal...",
+    "postComment": "Post Comment",
+    "posting": "Posting...",
+    "joinDiscussion": {
+      "title": "Join the discussion",
+      "description": "Sign in to share your thoughts on this proposal.",
+      "signIn": "Sign In"
+    },
+    "noComments": {
+      "title": "No comments yet",
+      "description": "Be the first to share your thoughts on this proposal!"
+    },
+    "justNow": "Just now",
+    "hoursAgo": "h ago",
+    "daysAgo": "d ago"
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account",
+    "signInDescription": "Sign in to submit ideas and engage with the community",
+    "signUpDescription": "Join IdeasMatter to start sharing your policy ideas",
+    "fullName": "Full Name",
+    "emailAddress": "Email Address",
+    "password": "Password",
+    "enterFullName": "Enter your full name",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "passwordRequirement": "Password must be at least 6 characters long",
+    "emailVerificationRequired": {
+      "title": "Email Verification Required",
+      "description": "After creating your account, you'll need to verify your email address before you can sign in."
+    },
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "signingIn": "Signing In...",
+    "creatingAccount": "Creating Account...",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signUp": "Sign Up",
+    "checkEmail": {
+      "title": "Check Your Email",
+      "accountCreated": "Account Created Successfully!",
+      "verificationSent": "We've sent a verification email to:",
+      "beforeSignIn": "Before you can sign in:",
+      "steps": [
+        "Check your email inbox (and spam folder)",
+        "Click the verification link in the email",
+        "Return here to sign in with your credentials"
+      ],
+      "continueToSignIn": "Continue to Sign In",
+      "didntReceive": "Didn't receive the email?",
+      "getHelp": "Get Help"
+    }
+  },
+  "footer": {
+    "description": "Empowering civic engagement through AI-powered policy drafting and blockchain voting.",
+    "technologyStack": "Technology Stack",
+    "openSource": "Open Source",
+    "openSourceDescription": "This platform is built with transparency and community in mind.",
+    "builtWith": "Built with Bolt.new",
+    "copyright": "Making democracy more accessible and transparent."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "tryAgain": "Try Again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "all": "All",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
+  }
+}
