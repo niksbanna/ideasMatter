@@ -50,6 +50,8 @@ export const ProposalView: React.FC = () => {
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [isAudioCached, setIsAudioCached] = useState(false);
+  const [sectionAudioBlobs, setSectionAudioBlobs] = useState<Record<string, Blob | null>>({});
+  const [isGeneratingSectionAudio, setIsGeneratingSectionAudio] = useState<Record<string, boolean>>({});
   
   // Video state
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
@@ -275,6 +277,47 @@ export const ProposalView: React.FC = () => {
     }
   };
 
+  const handleGenerateSectionAudio = async (section: string, text: string) => {
+    if (!proposal?.ai_draft) return;
+    
+    // Check cache first
+    const cacheKey = `${proposal.id}_${section}`;
+    const cachedAudio = audioCache.getCachedAudio(cacheKey, text);
+    
+    if (cachedAudio) {
+      setSectionAudioBlobs(prev => ({
+        ...prev,
+        [section]: cachedAudio
+      }));
+      return;
+    }
+
+    try {
+      setIsGeneratingSectionAudio(prev => ({
+        ...prev,
+        [section]: true
+      }));
+      
+      const audioBlob = await generateSpeech(text);
+      
+      // Cache the generated audio
+      audioCache.setCachedAudio(cacheKey, text, audioBlob);
+      
+      setSectionAudioBlobs(prev => ({
+        ...prev,
+        [section]: audioBlob
+      }));
+    } catch (error) {
+      console.error(`Error generating audio for ${section}:`, error);
+      alert(`Failed to generate audio for ${section}. Please check your ElevenLabs API configuration.`);
+    } finally {
+      setIsGeneratingSectionAudio(prev => ({
+        ...prev,
+        [section]: false
+      }));
+    }
+  };
+
   const handleGenerateVideo = async () => {
     if (!proposal?.ai_draft) return;
 
@@ -400,6 +443,45 @@ export const ProposalView: React.FC = () => {
   const selectedLangInfo = translationService.getLanguageInfo(selectedLanguage);
   const videoUrl = getVideoUrl(proposal.id);
   const isVideoGenerating = isGenerating(proposal.id);
+
+  // Format text with bullet points
+  const formatTextWithBullets = (text: string) => {
+    if (!text) return '';
+    
+    // Split by new lines
+    const lines = text.split('\n');
+    
+    // Process each line
+    return lines.map((line, index) => {
+      // Check if line starts with a bullet point indicator
+      const bulletMatch = line.match(/^(\s*[-•*]\s+)(.*)/);
+      const numberBulletMatch = line.match(/^(\s*\d+\.\s+)(.*)/);
+      
+      if (bulletMatch) {
+        // It's a bullet point
+        return (
+          <div key={index} className="flex items-start space-x-2 mb-1">
+            <span className="text-blue-600">•</span>
+            <span>{bulletMatch[2]}</span>
+          </div>
+        );
+      } else if (numberBulletMatch) {
+        // It's a numbered bullet point
+        return (
+          <div key={index} className="flex items-start space-x-2 mb-1">
+            <span className="text-blue-600">{numberBulletMatch[1]}</span>
+            <span>{numberBulletMatch[2]}</span>
+          </div>
+        );
+      } else if (line.trim() === '') {
+        // Empty line
+        return <div key={index} className="h-2"></div>;
+      } else {
+        // Regular text
+        return <p key={index} className="mb-2">{line}</p>;
+      }
+    });
+  };
 
   return (
     <>
@@ -859,35 +941,155 @@ export const ProposalView: React.FC = () => {
         {proposal.ai_draft && (
           <div className="space-y-8">
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
-                <span className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                <span>Problem Statement</span>
-              </h2>
-              <p className="text-slate-700 leading-relaxed">{proposal.ai_draft.problem}</p>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+                  <span className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                  <span>Problem Statement</span>
+                </h2>
+                <button
+                  onClick={() => handleGenerateSectionAudio('problem', proposal.ai_draft.problem)}
+                  disabled={isGeneratingSectionAudio['problem']}
+                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {isGeneratingSectionAudio['problem'] ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : sectionAudioBlobs['problem'] ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">
+                    {isGeneratingSectionAudio['problem'] ? 'Generating...' : 
+                     sectionAudioBlobs['problem'] ? 'Listen' : 'Generate Audio'}
+                  </span>
+                </button>
+              </div>
+              <div className="text-slate-700 leading-relaxed">
+                {formatTextWithBullets(proposal.ai_draft.problem)}
+              </div>
+              {sectionAudioBlobs['problem'] && (
+                <div className="mt-4">
+                  <audio 
+                    controls 
+                    className="w-full"
+                    src={URL.createObjectURL(sectionAudioBlobs['problem'])}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
-                <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                <span>Proposed Solution</span>
-              </h2>
-              <p className="text-slate-700 leading-relaxed">{proposal.ai_draft.solution}</p>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+                  <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                  <span>Proposed Solution</span>
+                </h2>
+                <button
+                  onClick={() => handleGenerateSectionAudio('solution', proposal.ai_draft.solution)}
+                  disabled={isGeneratingSectionAudio['solution']}
+                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {isGeneratingSectionAudio['solution'] ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : sectionAudioBlobs['solution'] ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">
+                    {isGeneratingSectionAudio['solution'] ? 'Generating...' : 
+                     sectionAudioBlobs['solution'] ? 'Listen' : 'Generate Audio'}
+                  </span>
+                </button>
+              </div>
+              <div className="text-slate-700 leading-relaxed">
+                {formatTextWithBullets(proposal.ai_draft.solution)}
+              </div>
+              {sectionAudioBlobs['solution'] && (
+                <div className="mt-4">
+                  <audio 
+                    controls 
+                    className="w-full"
+                    src={URL.createObjectURL(sectionAudioBlobs['solution'])}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
-                <span className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                <span>Expected Impact</span>
-              </h2>
-              <p className="text-slate-700 leading-relaxed">{proposal.ai_draft.impact}</p>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+                  <span className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                  <span>Expected Impact</span>
+                </h2>
+                <button
+                  onClick={() => handleGenerateSectionAudio('impact', proposal.ai_draft.impact)}
+                  disabled={isGeneratingSectionAudio['impact']}
+                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {isGeneratingSectionAudio['impact'] ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : sectionAudioBlobs['impact'] ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">
+                    {isGeneratingSectionAudio['impact'] ? 'Generating...' : 
+                     sectionAudioBlobs['impact'] ? 'Listen' : 'Generate Audio'}
+                  </span>
+                </button>
+              </div>
+              <div className="text-slate-700 leading-relaxed">
+                {formatTextWithBullets(proposal.ai_draft.impact)}
+              </div>
+              {sectionAudioBlobs['impact'] && (
+                <div className="mt-4">
+                  <audio 
+                    controls 
+                    className="w-full"
+                    src={URL.createObjectURL(sectionAudioBlobs['impact'])}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
-                <span className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                <span>Implementation Plan</span>
-              </h2>
-              <p className="text-slate-700 leading-relaxed">{proposal.ai_draft.implementation}</p>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+                  <span className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                  <span>Implementation Plan</span>
+                </h2>
+                <button
+                  onClick={() => handleGenerateSectionAudio('implementation', proposal.ai_draft.implementation)}
+                  disabled={isGeneratingSectionAudio['implementation']}
+                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {isGeneratingSectionAudio['implementation'] ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : sectionAudioBlobs['implementation'] ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">
+                    {isGeneratingSectionAudio['implementation'] ? 'Generating...' : 
+                     sectionAudioBlobs['implementation'] ? 'Listen' : 'Generate Audio'}
+                  </span>
+                </button>
+              </div>
+              <div className="text-slate-700 leading-relaxed">
+                {formatTextWithBullets(proposal.ai_draft.implementation)}
+              </div>
+              {sectionAudioBlobs['implementation'] && (
+                <div className="mt-4">
+                  <audio 
+                    controls 
+                    className="w-full"
+                    src={URL.createObjectURL(sectionAudioBlobs['implementation'])}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
