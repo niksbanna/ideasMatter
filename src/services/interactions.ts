@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { getCurrentUser } from './auth';
+import { submitVoteWithBlockchain } from './blockchainVoting';
 
 export interface Vote {
   id: string;
@@ -25,52 +26,34 @@ export interface Save {
   created_at: string;
 }
 
-// Enhanced vote functions to support different vote types
-export const submitVote = async (proposalId: string, voteType: 'up' | 'down' | 'yes' | 'no' | 'like'): Promise<void> => {
+// Enhanced vote function with blockchain integration
+export const submitVote = async (
+  proposalId: string, 
+  voteType: 'up' | 'down' | 'yes' | 'no' | 'like',
+  walletAddress?: string
+): Promise<{
+  success: boolean;
+  blockchainTxId?: string;
+  error?: string;
+}> => {
   const user = getCurrentUser();
   if (!user) {
     throw new Error('You must be logged in to vote');
   }
   
   try {
-    // First, check if user has already voted
-    const { data: existingVote } = await supabase
-      .from('proposal_votes')
-      .select('*')
-      .eq('proposal_id', proposalId)
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (existingVote) {
-      if (existingVote.vote_type === voteType) {
-        // Remove vote if clicking the same vote type
-        const { error } = await supabase
-          .from('proposal_votes')
-          .delete()
-          .eq('id', existingVote.id);
-        
-        if (error) throw error;
-      } else {
-        // Update vote type if different
-        const { error } = await supabase
-          .from('proposal_votes')
-          .update({ vote_type: voteType })
-          .eq('id', existingVote.id);
-        
-        if (error) throw error;
-      }
-    } else {
-      // Insert new vote
-      const { error } = await supabase
-        .from('proposal_votes')
-        .insert([{
-          proposal_id: proposalId,
-          user_id: user.id,
-          vote_type: voteType
-        }]);
-      
-      if (error) throw error;
+    // Use blockchain voting service
+    const result = await submitVoteWithBlockchain(proposalId, voteType, walletAddress);
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to submit vote');
     }
+
+    return {
+      success: true,
+      blockchainTxId: result.blockchainResult?.txId,
+      error: result.blockchainResult?.success === false ? result.blockchainResult.error : undefined
+    };
   } catch (error) {
     console.error('Error submitting vote:', error);
     throw new Error('Failed to submit vote');

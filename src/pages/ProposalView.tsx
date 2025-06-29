@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Share2, Bookmark, BookmarkCheck, User, Calendar, Tag, Volume2, Video, ArrowLeft, ExternalLink, LogIn, Clock, Heart, CheckCircle, X, Flag, Globe } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Bookmark, BookmarkCheck, User, Calendar, Tag, Volume2, Video, ArrowLeft, ExternalLink, LogIn, Clock, Heart, CheckCircle, X, Flag, Globe, Wallet } from 'lucide-react';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { CommentSection } from '../components/CommentSection';
@@ -9,11 +9,14 @@ import { ShareModal } from '../components/ShareModal';
 import { ReportModal } from '../components/ReportModal';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { TranslatedContent } from '../components/TranslatedContent';
+import { WalletConnect } from '../components/WalletConnect';
+import { BlockchainVoteStatus } from '../components/BlockchainVoteStatus';
 import { generateSpeech, formatTextForSpeech } from '../services/elevenlabs';
 import { generateExplainerVideo, generateVideoScript, getVideoStatus } from '../services/tavus';
 import { getProposal, Proposal } from '../services/supabase';
 import { submitVote, getUserVote, toggleSave, isSaved } from '../services/interactions';
-import { isAuthenticated } from '../services/auth';
+import { getBlockchainVoteStatus, type BlockchainVoteRecord } from '../services/blockchainVoting';
+import { isAuthenticated, getCurrentUser } from '../services/auth';
 import { audioCache } from '../services/audioCache';
 import { translationService, type Translation } from '../services/translation';
 
@@ -30,6 +33,16 @@ export const ProposalView: React.FC = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [authAction, setAuthAction] = useState<'vote' | 'comment' | 'save' | 'report'>('vote');
+  
+  // Wallet state
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletProvider, setWalletProvider] = useState<string | null>(null);
+  const [showWalletConnect, setShowWalletConnect] = useState(false);
+  
+  // Blockchain voting state
+  const [blockchainVoteStatus, setBlockchainVoteStatus] = useState<BlockchainVoteRecord | null>(null);
+  const [isBlockchainVoting, setIsBlockchainVoting] = useState(false);
+  const [blockchainError, setBlockchainError] = useState<string | null>(null);
   
   // Audio state
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -48,6 +61,9 @@ export const ProposalView: React.FC = () => {
   const [translatedAudioBlob, setTranslatedAudioBlob] = useState<Blob | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
 
+  const authenticated = isAuthenticated();
+  const currentUser = getCurrentUser();
+
   useEffect(() => {
     if (id) {
       loadProposal(id);
@@ -55,10 +71,16 @@ export const ProposalView: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if (proposal && isAuthenticated()) {
+    if (proposal && authenticated) {
       loadUserInteractions();
     }
-  }, [proposal]);
+  }, [proposal, authenticated]);
+
+  useEffect(() => {
+    if (proposal && authenticated && currentUser) {
+      loadBlockchainVoteStatus();
+    }
+  }, [proposal, authenticated, currentUser]);
 
   // Check for cached audio when proposal loads
   useEffect(() => {
@@ -93,7 +115,7 @@ export const ProposalView: React.FC = () => {
   };
 
   const loadUserInteractions = async () => {
-    if (!proposal || !isAuthenticated()) return;
+    if (!proposal || !authenticated) return;
 
     try {
       // Load user vote
@@ -108,8 +130,19 @@ export const ProposalView: React.FC = () => {
     }
   };
 
+  const loadBlockchainVoteStatus = async () => {
+    if (!proposal || !currentUser) return;
+
+    try {
+      const status = await getBlockchainVoteStatus(proposal.id, currentUser.id);
+      setBlockchainVoteStatus(status);
+    } catch (error) {
+      console.error('Error loading blockchain vote status:', error);
+    }
+  };
+
   const requireAuth = (action: 'vote' | 'comment' | 'save' | 'report') => {
-    if (!isAuthenticated()) {
+    if (!authenticated) {
       setAuthAction(action);
       setShowAuthModal(true);
       return false;
@@ -124,13 +157,27 @@ export const ProposalView: React.FC = () => {
 
     try {
       setIsVoting(true);
-      await submitVote(proposal.id, voteType);
+      setIsBlockchainVoting(!!walletAddress);
+      setBlockchainError(null);
       
+      const result = await submitVote(proposal.id, voteType, walletAddress || undefined);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit vote');
+      }
+
       // Update local state
       if (userVote === voteType) {
         setUserVote(null);
       } else {
         setUserVote(voteType);
+      }
+
+      // If blockchain transaction was successful, update status
+      if (result.blockchainTxId) {
+        await loadBlockchainVoteStatus();
+      } else if (walletAddress && result.error) {
+        setBlockchainError(result.error);
       }
 
       // Reload proposal to get updated vote counts
@@ -140,6 +187,7 @@ export const ProposalView: React.FC = () => {
       alert('Failed to submit vote. Please try again.');
     } finally {
       setIsVoting(false);
+      setIsBlockchainVoting(false);
     }
   };
 
@@ -180,6 +228,14 @@ export const ProposalView: React.FC = () => {
     // If user was trying to report, show report modal
     if (authAction === 'report') {
       setShowReportModal(true);
+    }
+  };
+
+  const handleWalletChange = (address: string | null, provider: string | null) => {
+    setWalletAddress(address);
+    setWalletProvider(provider);
+    if (address) {
+      setShowWalletConnect(false);
     }
   };
 
@@ -332,8 +388,6 @@ export const ProposalView: React.FC = () => {
     return Math.round(((proposal.votes_no || 0) / total) * 100);
   };
 
-  const authenticated = isAuthenticated();
-
   // Check if audio is available (cached or generated)
   const hasAudio = !!audioBlob;
   const textContent = proposal.ai_draft ? formatTextForSpeech(proposal.ai_draft) : '';
@@ -371,7 +425,7 @@ export const ProposalView: React.FC = () => {
 
   return (
     <>
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8 px-4 py-8">
         {/* Back Navigation */}
         <Link
           to="/explorer"
@@ -545,6 +599,54 @@ export const ProposalView: React.FC = () => {
                 error={videoError}
                 onClose={() => setShowVideoPlayer(false)}
               />
+            </div>
+          )}
+
+          {/* Blockchain Wallet Section */}
+          {authenticated && (
+            <div className="border-t border-slate-200 pt-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
+                  <Wallet className="h-5 w-5" />
+                  <span>Blockchain Voting</span>
+                </h3>
+                {!walletAddress && (
+                  <button
+                    onClick={() => setShowWalletConnect(!showWalletConnect)}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    {showWalletConnect ? 'Hide Wallet' : 'Connect Wallet'}
+                  </button>
+                )}
+              </div>
+
+              {showWalletConnect || walletAddress ? (
+                <WalletConnect
+                  onWalletChange={handleWalletChange}
+                  currentAddress={walletAddress}
+                  currentProvider={walletProvider}
+                />
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-blue-800 text-sm">
+                    Connect an Algorand wallet to record your votes on the blockchain for transparency and immutability.
+                  </p>
+                </div>
+              )}
+
+              {/* Blockchain Vote Status */}
+              {blockchainVoteStatus && (
+                <div className="mt-4">
+                  <BlockchainVoteStatus
+                    isOnChain={blockchainVoteStatus.blockchain_status === 'confirmed'}
+                    txId={blockchainVoteStatus.blockchain_tx_id}
+                    confirmedRound={blockchainVoteStatus.blockchain_confirmed_round}
+                    timestamp={blockchainVoteStatus.blockchain_timestamp}
+                    isLoading={isBlockchainVoting}
+                    error={blockchainError}
+                  />
+                </div>
+              )}
             </div>
           )}
           
@@ -728,6 +830,7 @@ export const ProposalView: React.FC = () => {
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div 
                       className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                
                       style={{ width: `${getYesPercentage()}%` }}
                     ></div>
                   </div>
