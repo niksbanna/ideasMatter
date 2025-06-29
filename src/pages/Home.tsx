@@ -255,7 +255,7 @@ export const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto flex gap-6">
+      <div className="max-w-7xl mx-auto flex gap-6 px-4 py-6">
         {/* Left Sidebar */}
         <div className="hidden lg:block w-80 py-6">
           <div className="sticky top-6 space-y-6">
@@ -409,6 +409,28 @@ export const Home: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Welcome Video */}
+          <div className="mb-6 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="aspect-video">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed/jqg6DZ3Njhw" 
+                title="Welcome to IdeasMatter" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+                className="w-full h-full"
+              ></iframe>
+            </div>
+            <div className="p-4">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Welcome to IdeasMatter</h2>
+              <p className="text-slate-600">
+                Learn how IdeasMatter works and how you can participate in shaping policies and discussions.
+              </p>
             </div>
           </div>
 
