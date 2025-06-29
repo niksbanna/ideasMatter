@@ -42,17 +42,63 @@ export const submitVote = async (
   }
   
   try {
-    // Use blockchain voting service
-    const result = await submitVoteWithBlockchain(proposalId, voteType, walletAddress);
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to submit vote');
+    // First, check if user has already voted
+    const { data: existingVote } = await supabase
+      .from('proposal_votes')
+      .select('*')
+      .eq('proposal_id', proposalId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    // Handle database vote
+    if (existingVote) {
+      if (existingVote.vote_type === voteType) {
+        // Remove vote if clicking the same vote type
+        const { error } = await supabase
+          .from('proposal_votes')
+          .delete()
+          .eq('id', existingVote.id);
+        
+        if (error) throw error;
+      } else {
+        // Update vote type if different
+        const { error } = await supabase
+          .from('proposal_votes')
+          .update({ vote_type: voteType })
+          .eq('id', existingVote.id);
+        
+        if (error) throw error;
+      }
+    } else {
+      // Insert new vote
+      const { error } = await supabase
+        .from('proposal_votes')
+        .insert([{
+          proposal_id: proposalId,
+          user_id: user.id,
+          vote_type: voteType
+        }]);
+      
+      if (error) throw error;
+    }
+
+    // Use blockchain voting service if wallet address is provided
+    let blockchainResult;
+    if (walletAddress) {
+      blockchainResult = await submitVoteWithBlockchain(proposalId, voteType, walletAddress);
+      
+      if (!blockchainResult.success) {
+        return {
+          success: true, // Database vote succeeded
+          error: blockchainResult.error || 'Failed to submit blockchain vote',
+          blockchainTxId: undefined
+        };
+      }
     }
 
     return {
       success: true,
-      blockchainTxId: result.blockchainResult?.txId,
-      error: result.blockchainResult?.success === false ? result.blockchainResult.error : undefined
+      blockchainTxId: blockchainResult?.blockchainResult?.txId
     };
   } catch (error) {
     console.error('Error submitting vote:', error);
