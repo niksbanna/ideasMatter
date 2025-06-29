@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Lightbulb, Users, PlusCircle, BarChart3, LogIn } from 'lucide-react';
+import { Lightbulb, Users, PlusCircle, BarChart3, LogIn, Shield } from 'lucide-react';
 import { UserDropdown } from './UserDropdown';
 import { AuthModal } from './AuthModal';
 import { StaticLanguageSelector } from './StaticLanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
-import { isAuthenticated } from '../services/auth';
+import { isAuthenticated, getCurrentUser } from '../services/auth';
 
 interface NavbarProps {
   onAuthChange?: () => void;
@@ -19,6 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthChange }) => {
 
   const isActive = (path: string) => location.pathname === path;
   const authenticated = isAuthenticated();
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.email === 'admin@ideasmatter.com' || currentUser?.user_metadata?.role === 'admin';
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
@@ -102,6 +104,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthChange }) => {
                 >
                   <BarChart3 className="h-4 w-4" />
                   <span>{t('nav.dashboard')}</span>
+                </Link>
+              )}
+
+              {/* Admin Link - Only show for admin users */}
+              {authenticated && isAdmin && (
+                <Link
+                  to="/admin"
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
+                    isActive('/admin') 
+                      ? 'bg-red-100 text-red-600' 
+                      : 'text-slate-600 hover:text-red-600 hover:bg-red-50'
+                  }`}
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
                 </Link>
               )}
             </div>

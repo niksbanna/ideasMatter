@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Explorer } from './pages/Explorer';
 import { ProposalView } from './pages/ProposalView';
 import { Profile } from './pages/Profile';
+import { Admin } from './pages/Admin';
 import { Footer } from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthModal } from './components/AuthModal';
@@ -90,6 +91,14 @@ function App() {
                 element={
                   <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
+                    <Admin />
                   </ProtectedRoute>
                 } 
               />
