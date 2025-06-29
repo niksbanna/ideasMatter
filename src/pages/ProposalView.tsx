@@ -12,13 +12,14 @@ import { TranslatedContent } from '../components/TranslatedContent';
 import { WalletConnect } from '../components/WalletConnect';
 import { BlockchainVoteStatus } from '../components/BlockchainVoteStatus';
 import { generateSpeech, formatTextForSpeech } from '../services/elevenlabs';
-import { generateExplainerVideo, generateVideoScript, getVideoStatus } from '../services/tavus';
+import { generateVideoScript } from '../services/tavus';
 import { getProposal, Proposal } from '../services/supabase';
 import { submitVote, getUserVote, toggleSave, isSaved } from '../services/interactions';
 import { getBlockchainVoteStatus, type BlockchainVoteRecord } from '../services/blockchainVoting';
 import { isAuthenticated, getCurrentUser } from '../services/auth';
 import { audioCache } from '../services/audioCache';
 import { translationService, type Translation } from '../services/translation';
+import { useVideoGeneration } from '../contexts/VideoGenerationContext';
 
 export const ProposalView: React.FC = () => {
   const { id } = useParams();
@@ -51,8 +52,6 @@ export const ProposalView: React.FC = () => {
   const [isAudioCached, setIsAudioCached] = useState(false);
   
   // Video state
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
 
@@ -60,6 +59,8 @@ export const ProposalView: React.FC = () => {
   const [translations, setTranslations] = useState<{ title: Translation; description: Translation } | null>(null);
   const [translatedAudioBlob, setTranslatedAudioBlob] = useState<Blob | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+
+  const { generateVideo, getVideoUrl, isGenerating } = useVideoGeneration();
 
   const authenticated = isAuthenticated();
   const currentUser = getCurrentUser();
@@ -278,46 +279,21 @@ export const ProposalView: React.FC = () => {
     if (!proposal?.ai_draft) return;
 
     try {
-      setIsGeneratingVideo(true);
-      setShowVideoPlayer(true);
       setVideoError(null);
       
       // Generate script using AI
       const script = await generateVideoScript(proposal.ai_draft);
       
-      // Generate video using Tavus
-      const videoResponse = await generateExplainerVideo(script);
+      // Start video generation in background
+      await generateVideo(proposal.id, script);
       
-      // Poll for video completion
-      const pollVideo = async () => {
-        try {
-          const status = await getVideoStatus(videoResponse.video_id);
-          
-          if (status.status === 'completed' && status.video_url) {
-            setVideoUrl(status.video_url);
-            setIsGeneratingVideo(false);
-          } else if (status.status === 'failed') {
-            throw new Error('Video generation failed');
-          } else {
-            // Continue polling
-            setTimeout(pollVideo, 5000);
-          }
-        } catch (error) {
-          console.error('Error polling video status:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-          setVideoError(`Failed to generate video: ${errorMessage}`);
-          setIsGeneratingVideo(false);
-        }
-      };
-      
-      // Start polling after a short delay
-      setTimeout(pollVideo, 5000);
+      // Show video player immediately
+      setShowVideoPlayer(true);
       
     } catch (error) {
       console.error('Error generating video:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setVideoError(`Failed to generate video: ${errorMessage}`);
-      setIsGeneratingVideo(false);
     }
   };
 
@@ -422,6 +398,8 @@ export const ProposalView: React.FC = () => {
   };
 
   const selectedLangInfo = translationService.getLanguageInfo(selectedLanguage);
+  const videoUrl = getVideoUrl(proposal.id);
+  const isVideoGenerating = isGenerating(proposal.id);
 
   return (
     <>
@@ -559,11 +537,15 @@ export const ProposalView: React.FC = () => {
                 
                 <button
                   onClick={handleGenerateVideo}
-                  disabled={isGeneratingVideo}
+                  disabled={isVideoGenerating}
                   className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors font-medium"
                 >
                   <Video className="h-4 w-4" />
-                  <span>🎥 Watch Explainer</span>
+                  <span>
+                    {isVideoGenerating ? '🎥 Generating...' : 
+                     videoUrl ? '🎥 Watch Video' : 
+                     '🎥 Generate Video'}
+                  </span>
                 </button>
               </div>
               
@@ -595,7 +577,7 @@ export const ProposalView: React.FC = () => {
             <div className="mb-6">
               <VideoPlayer
                 videoUrl={videoUrl}
-                isLoading={isGeneratingVideo}
+                isLoading={isVideoGenerating}
                 error={videoError}
                 onClose={() => setShowVideoPlayer(false)}
               />
@@ -830,7 +812,6 @@ export const ProposalView: React.FC = () => {
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div 
                       className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
-                
                       style={{ width: `${getYesPercentage()}%` }}
                     ></div>
                   </div>

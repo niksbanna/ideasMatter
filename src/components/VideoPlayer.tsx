@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play, X, Loader2, AlertCircle } from 'lucide-react';
+import { useVideoGeneration } from '../contexts/VideoGenerationContext';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -15,6 +16,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onClose,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isGenerating } = useVideoGeneration();
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
@@ -22,7 +24,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     onClose?.();
   };
 
-  if (isLoading) {
+  if (isLoading || isGenerating) {
     return (
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
         <div className="flex items-center justify-center space-x-3">
@@ -31,6 +33,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
         <div className="mt-3 text-sm text-slate-500 text-center">
           This may take 1-2 minutes to complete
+        </div>
+        <div className="mt-3 text-xs text-blue-600 text-center">
+          You can continue using the site while the video is being generated
         </div>
       </div>
     );

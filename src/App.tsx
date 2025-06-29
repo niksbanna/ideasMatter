@@ -13,6 +13,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthModal } from './components/AuthModal';
 import { Chatbot } from './components/Chatbot';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { VideoGenerationProvider } from './contexts/VideoGenerationContext';
 import { initializeAuth, onAuthStateChange } from './services/auth';
 
 function App() {
@@ -64,62 +65,64 @@ function App() {
 
   return (
     <LanguageProvider>
-      <Router>
-        <div key={authKey} className="min-h-screen bg-slate-50">
-          <Navbar onAuthChange={handleAuthChange} />
-          <main>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route 
-                path="/submit" 
-                element={
-                  <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
-                    <SubmitIdea />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
-                    <Profile />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
-                    <Admin />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/explorer" element={<Explorer />} />
-              <Route path="/proposal/:id" element={<ProposalView />} />
-            </Routes>
-          </main>
-          <Footer />
-          
-          {/* Chatbot - Always available */}
-          <Chatbot />
-        </div>
-      </Router>
+      <VideoGenerationProvider>
+        <Router>
+          <div key={authKey} className="min-h-screen bg-slate-50">
+            <Navbar onAuthChange={handleAuthChange} />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route 
+                  path="/submit" 
+                  element={
+                    <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
+                      <SubmitIdea />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute onUnauthorized={() => handleOpenAuthModal('signin')}>
+                      <Admin />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/explorer" element={<Explorer />} />
+                <Route path="/proposal/:id" element={<ProposalView />} />
+              </Routes>
+            </main>
+            <Footer />
+            
+            {/* Chatbot - Always available */}
+            <Chatbot />
+          </div>
+        </Router>
 
-      {/* Global Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={handleAuthSuccess}
-        initialMode={authMode}
-      />
+        {/* Global Auth Modal */}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+          initialMode={authMode}
+        />
+      </VideoGenerationProvider>
     </LanguageProvider>
   );
 }

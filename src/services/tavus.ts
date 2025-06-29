@@ -134,3 +134,41 @@ export const generateVideoScript = async (policyContent: any): Promise<string> =
     return `This policy proposal addresses a key community issue with a practical solution. The benefits are clear and implementation is straightforward. Your vote can help make this positive change happen. Cast your vote today and be part of the solution.`;
   }
 };
+
+// Mock implementation for development when API key is not available
+export const mockGenerateExplainerVideo = async (script: string): Promise<VideoGenerationResponse> => {
+  console.log('Using mock video generation with script:', script);
+  
+  // Simulate API response
+  return {
+    video_id: `mock-${Date.now()}`,
+    status: 'queued',
+    created_at: new Date().toISOString()
+  };
+};
+
+export const mockGetVideoStatus = async (videoId: string): Promise<VideoGenerationResponse> => {
+  console.log('Checking mock video status for:', videoId);
+  
+  // Extract timestamp from mock ID to simulate progress
+  const timestamp = parseInt(videoId.split('-')[1]);
+  const elapsedSeconds = (Date.now() - timestamp) / 1000;
+  
+  // Simulate different statuses based on elapsed time
+  let status: 'queued' | 'generating' | 'completed' | 'failed' = 'queued';
+  let videoUrl: string | undefined = undefined;
+  
+  if (elapsedSeconds > 5 && elapsedSeconds <= 15) {
+    status = 'generating';
+  } else if (elapsedSeconds > 15) {
+    status = 'completed';
+    videoUrl = 'https://example.com/mock-video.mp4';
+  }
+  
+  return {
+    video_id: videoId,
+    status,
+    video_url: videoUrl,
+    created_at: new Date(timestamp).toISOString()
+  };
+};
