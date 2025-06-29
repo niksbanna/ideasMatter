@@ -3,7 +3,7 @@ import { ExternalLink, CheckCircle, Clock, AlertCircle, Shield, Loader2 } from '
 import { getTransactionExplorerUrl } from '../services/algorand';
 import { getNodelyExplorerUrl, isNodelyConfigured } from '../services/nodelyAlgorand';
 
-interface BlockchainVoteStatusProps {
+interface BlockchainProposalStatusProps {
   isOnChain: boolean;
   txId?: string;
   confirmedRound?: number;
@@ -12,7 +12,7 @@ interface BlockchainVoteStatusProps {
   error?: string;
 }
 
-export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
+export const BlockchainProposalStatus: React.FC<BlockchainProposalStatusProps> = ({
   isOnChain,
   txId,
   confirmedRound,
@@ -28,7 +28,7 @@ export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
     return (
       <div className="flex items-center space-x-2 text-sm text-blue-600">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Recording vote on blockchain...</span>
+        <span>Recording proposal on blockchain...</span>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2 mb-1">
               <Shield className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-900">Vote Recorded on Blockchain</span>
+              <span className="text-sm font-medium text-emerald-900">Proposal Recorded on Blockchain</span>
             </div>
             <div className="space-y-1 text-xs text-emerald-700">
               <div className="flex items-center justify-between">
@@ -92,7 +92,7 @@ export const BlockchainVoteStatus: React.FC<BlockchainVoteStatusProps> = ({
   return (
     <div className="flex items-center space-x-2 text-sm text-slate-500">
       <Clock className="h-4 w-4" />
-      <span>Vote recorded locally only</span>
+      <span>Proposal recorded locally only</span>
     </div>
   );
 };

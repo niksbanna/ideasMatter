@@ -6,6 +6,11 @@ import {
   type AlgorandVoteResult,
   type VoteTransaction 
 } from './algorand';
+import { 
+  submitNodelyVote,
+  isNodelyConfigured,
+  type NodelyVoteResult
+} from './nodelyAlgorand';
 import algosdk from 'algosdk';
 
 export interface BlockchainVoteRecord {
@@ -30,7 +35,7 @@ export const submitVoteWithBlockchain = async (
 ): Promise<{
   success: boolean;
   voteId?: string;
-  blockchainResult?: AlgorandVoteResult;
+  blockchainResult?: AlgorandVoteResult | NodelyVoteResult;
   error?: string;
 }> => {
   const user = getCurrentUser();
@@ -86,7 +91,7 @@ export const submitVoteWithBlockchain = async (
     }
 
     // If wallet is connected, record vote on blockchain
-    let blockchainResult: AlgorandVoteResult | undefined;
+    let blockchainResult: AlgorandVoteResult | NodelyVoteResult | undefined;
     
     if (walletAddress) {
       try {
@@ -101,12 +106,21 @@ export const submitVoteWithBlockchain = async (
           demoAccounts.set(user.id, voterAccount);
         }
 
-        // Submit vote to blockchain
-        blockchainResult = await submitVoteToBlockchain(
-          voterAccount,
-          proposalId,
-          voteType
-        );
+        // Submit vote to blockchain - use Nodely API if configured
+        if (isNodelyConfigured()) {
+          blockchainResult = await submitNodelyVote(
+            voterAccount,
+            proposalId,
+            voteType
+          );
+        } else {
+          // Fallback to regular Algorand client
+          blockchainResult = await submitVoteToBlockchain(
+            voterAccount,
+            proposalId,
+            voteType
+          );
+        }
 
         // Store blockchain transaction info
         if (blockchainResult.success && blockchainResult.txId) {
@@ -197,4 +211,107 @@ export const initializeDemoAccount = (userId: string): algosdk.Account => {
     return account;
   }
   return demoAccounts.get(userId)!;
+};
+
+// Submit a proposal to the blockchain
+export const submitProposalToBlockchain = async (
+  proposalId: string,
+  title: string,
+  description: string,
+  walletAddress?: string
+): Promise<{
+  success: boolean;
+  txId?: string;
+  error?: string;
+}> => {
+  const user = getCurrentUser();
+  if (!user) {
+    return { success: false, error: 'User not authenticated' };
+  }
+
+  if (!walletAddress) {
+    return { success: false, error: 'Wallet not connected' };
+  }
+
+  try {
+    // Get or create demo account for this user
+    let proposerAccount: algosdk.Account;
+    
+    if (demoAccounts.has(user.id)) {
+      proposerAccount = demoAccounts.get(user.id)!;
+    } else {
+      // Create demo account for blockchain operations
+      proposerAccount = createDemoAccount();
+      demoAccounts.set(user.id, proposerAccount);
+    }
+
+    // Create proposal data for blockchain
+    const proposalData = {
+      type: 'PROPOSAL',
+      id: proposalId,
+      title: title.substring(0, 100), // Limit length for blockchain
+      description: description.substring(0, 500), // Limit length for blockchain
+      creator: user.id,
+      timestamp: Date.now(),
+      platform: 'IdeasMatter'
+    };
+
+    // Create note with proposal data (max 1024 bytes)
+    const note = new TextEncoder().encode(JSON.stringify(proposalData));
+    
+    if (note.length > 1024) {
+      throw new Error('Proposal data too large for transaction note');
+    }
+
+    // Get suggested transaction parameters
+    const suggestedParams = isNodelyConfigured() 
+      ? await algodClient.getTransactionParams().do()
+      : await algodClient.getTransactionParams().do();
+    
+    // Create transaction
+    const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      from: proposerAccount.addr,
+      to: proposerAccount.addr, // Self-transaction to store proposal data
+      amount: 1000, // 0.001 ALGO (minimal amount)
+      note: note,
+      suggestedParams: suggestedParams,
+    });
+    
+    // Sign transaction
+    const signedTxn = txn.signTxn(proposerAccount.sk);
+    
+    // Submit transaction
+    const txId = txn.txID().toString();
+    
+    if (isNodelyConfigured()) {
+      await algodClient.sendRawTransaction(signedTxn).do();
+    } else {
+      await algodClient.sendRawTransaction(signedTxn).do();
+    }
+    
+    // Wait for confirmation
+    const confirmedTxn = await algosdk.waitForConfirmation(algodClient, txId, 4);
+    
+    // Update proposal with blockchain transaction info
+    await supabase
+      .from('proposals')
+      .update({
+        blockchain_tx_id: txId,
+        blockchain_confirmed_round: confirmedTxn['confirmed-round'],
+        blockchain_timestamp: Date.now(),
+        blockchain_status: 'confirmed'
+      })
+      .eq('id', proposalId);
+    
+    return {
+      success: true,
+      txId: txId
+    };
+  } catch (error) {
+    console.error('Error submitting proposal to blockchain:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown blockchain error'
+    };
+  }
 };

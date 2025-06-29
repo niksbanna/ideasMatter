@@ -5,7 +5,11 @@ import {
   formatAlgoAmount, 
   isValidAddress,
   createDemoAccount
-} from '../services/algorand';
+} from './algorand';
+import { 
+  getNodelyAccountInfo,
+  isNodelyConfigured
+} from './nodelyAlgorand';
 import { PeraWalletConnect } from '@perawallet/connect';
 import { DeflyWalletConnect } from '@blockshake/defly-connect';
 import { initializeDemoAccount } from '../services/blockchainVoting';
@@ -58,7 +62,14 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
     
     setIsLoadingBalance(true);
     try {
-      const accountBalance = await getAccountBalance(currentAddress);
+      // Use Nodely API if configured, otherwise use regular Algorand client
+      let accountBalance;
+      if (isNodelyConfigured()) {
+        const accountInfo = await getNodelyAccountInfo(currentAddress);
+        accountBalance = accountInfo.amount || 0;
+      } else {
+        accountBalance = await getAccountBalance(currentAddress);
+      }
       setBalance(accountBalance);
     } catch (error) {
       console.error('Error loading balance:', error);
@@ -242,6 +253,18 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
             </div>
           </div>
         )}
+
+        {isNodelyConfigured() && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <Shield className="h-4 w-4 text-blue-600 mt-0.5" />
+              <div className="text-blue-800 text-sm">
+                <p className="font-medium">Nodely API Connected</p>
+                <p>Your votes will be recorded on the Algorand blockchain using the Nodely API for enhanced reliability.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -319,6 +342,9 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
         <div className="mt-6 text-xs text-slate-500 space-y-2">
           <p>No wallet? Create a demo account for testing</p>
           <p>Votes are recorded on Algorand TestNet for demonstration</p>
+          {isNodelyConfigured() && (
+            <p className="text-blue-600">Using Nodely API for enhanced blockchain connectivity</p>
+          )}
         </div>
       </div>
     </div>
