@@ -461,48 +461,97 @@ const dummyIdeas = [
   }
 ];
 
-// Function to add dummy data
+// Function to create a dummy user and return the ID
+async function createDummyUser() {
+  try {
+    // Create a dummy user in auth.users table
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: 'dummy@ideasmatter.com',
+      password: 'dummypassword123',
+      email_confirm: true,
+      user_metadata: {
+        full_name: 'Community Member'
+      }
+    });
+
+    if (error) {
+      console.log('User might already exist, using fallback approach...');
+      // If user creation fails, we'll use a direct SQL approach
+      return null;
+    }
+
+    return data.user?.id || null;
+  } catch (error) {
+    console.log('Auth admin not available, using fallback approach...');
+    return null;
+  }
+}
+
+// Function to add dummy data one by one
 async function addDummyIdeas() {
-  console.log('Starting to add dummy ideas...');
+  console.log('Starting to add dummy ideas one by one...');
   
   try {
-    // Add ideas in batches to avoid overwhelming the database
-    const batchSize = 10;
-    for (let i = 0; i < dummyIdeas.length; i += batchSize) {
-      const batch = dummyIdeas.slice(i, i + batchSize);
+    // Try to create a dummy user first
+    const dummyUserId = await createDummyUser();
+    console.log('Dummy user ID:', dummyUserId || 'Using fallback approach');
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    // Add each idea individually
+    for (let i = 0; i < dummyIdeas.length; i++) {
+      const idea = dummyIdeas[i];
       
-      console.log(`Adding batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(dummyIdeas.length / batchSize)}...`);
+      console.log(`Adding idea ${i + 1}/${dummyIdeas.length}: "${idea.title}"`);
       
-      const { data, error } = await supabase
-        .from('proposals')
-        .insert(batch.map(idea => ({
+      try {
+        const ideaData = {
           ...idea,
           votes_up: Math.floor(Math.random() * 50), // Random votes for realism
           votes_down: Math.floor(Math.random() * 20),
           votes_yes: Math.floor(Math.random() * 40),
           votes_no: Math.floor(Math.random() * 30),
           likes: Math.floor(Math.random() * 60),
-          user_id: null // Will be set to a random UUID by the database
-        })));
+          user_id: dummyUserId // Will be null if user creation failed
+        };
 
-      if (error) {
-        console.error('Error adding batch:', error);
-        continue;
+        const { data, error } = await supabase
+          .from('proposals')
+          .insert([ideaData])
+          .select('id, title');
+
+        if (error) {
+          console.error(`❌ Error adding "${idea.title}":`, error.message);
+          errorCount++;
+        } else {
+          console.log(`✅ Successfully added: "${idea.title}"`);
+          successCount++;
+        }
+        
+        // Small delay between insertions to avoid overwhelming the database
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+      } catch (insertError) {
+        console.error(`❌ Exception adding "${idea.title}":`, insertError);
+        errorCount++;
       }
-
-      console.log(`Successfully added ${batch.length} ideas`);
-      
-      // Small delay between batches
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
-    console.log('✅ Successfully added all dummy ideas!');
-    console.log(`Total ideas added: ${dummyIdeas.length}`);
-    console.log('Categories covered:', [...new Set(dummyIdeas.map(idea => idea.category))].join(', '));
-    console.log('Types included:', [...new Set(dummyIdeas.map(idea => idea.idea_type))].join(', '));
+    console.log('\n📊 Summary:');
+    console.log(`✅ Successfully added: ${successCount} ideas`);
+    console.log(`❌ Failed to add: ${errorCount} ideas`);
+    console.log(`📈 Success rate: ${Math.round((successCount / dummyIdeas.length) * 100)}%`);
+    
+    if (successCount > 0) {
+      console.log('\n🎉 Dummy data has been added to your database!');
+      console.log('Categories covered:', [...new Set(dummyIdeas.map(idea => idea.category))].join(', '));
+      console.log('Types included:', [...new Set(dummyIdeas.map(idea => idea.idea_type))].join(', '));
+      console.log('\nRefresh your Explorer page to see the new ideas!');
+    }
     
   } catch (error) {
-    console.error('❌ Error adding dummy ideas:', error);
+    console.error('❌ Fatal error adding dummy ideas:', error);
   }
 }
 
