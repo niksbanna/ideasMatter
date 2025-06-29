@@ -65,9 +65,9 @@ function App() {
   return (
     <LanguageProvider>
       <Router>
-        <div key={authKey} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div key={authKey} className="min-h-screen bg-slate-50">
           <Navbar onAuthChange={handleAuthChange} />
-          <main className="container mx-auto px-4 py-8">
+          <main>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route 
