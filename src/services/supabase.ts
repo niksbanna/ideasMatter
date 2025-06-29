@@ -41,6 +41,10 @@ export interface Proposal {
   updated_at: string;
   validation_score?: number;
   validation_reasons?: string[];
+  blockchain_tx_id?: string;
+  blockchain_confirmed_round?: number;
+  blockchain_timestamp?: number;
+  blockchain_status?: string;
 }
 
 export interface IdeaSubmission {
@@ -53,6 +57,16 @@ export interface IdeaSubmission {
   idea_type?: 'proposal' | 'poll';
   validation_score?: number;
   validation_reasons?: string[];
+}
+
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  filterCategory?: string;
+  filterType?: string;
+  filterStatus?: string;
+  searchTerm?: string;
 }
 
 export const submitIdea = async (idea: IdeaSubmission): Promise<string> => {
@@ -126,32 +140,94 @@ export const submitIdea = async (idea: IdeaSubmission): Promise<string> => {
   }
 };
 
-export const getProposals = async (): Promise<Proposal[]> => {
+export const getProposals = async (params: PaginationParams = {}): Promise<{
+  data: Proposal[];
+  count: number;
+}> => {
   try {
     // Validate Supabase configuration before making request
     if (!supabaseUrl || !supabaseKey || 
         supabaseUrl === 'your_supabase_url_here' || 
         supabaseKey === 'your_supabase_anon_key_here') {
       console.warn('Supabase is not properly configured. Returning empty proposals list.');
-      return [];
+      return { data: [], count: 0 };
     }
 
-    // Only fetch active and completed proposals for public view (exclude rejected and hidden ones)
-    const { data, error } = await supabase
+    const {
+      page = 1,
+      pageSize = 10,
+      sortBy = 'newest',
+      filterCategory = 'all',
+      filterType = 'all',
+      filterStatus = 'all',
+      searchTerm = ''
+    } = params;
+
+    // Start building the query
+    let query = supabase
       .from('proposals')
-      .select('*')
-      .in('status', ['active', 'completed'])
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' });
+
+    // Apply filters
+    if (filterStatus !== 'all') {
+      query = query.eq('status', filterStatus);
+    } else {
+      // Only fetch active and completed proposals for public view (exclude rejected and hidden ones)
+      query = query.in('status', ['active', 'completed']);
+    }
+
+    if (filterCategory !== 'all') {
+      query = query.eq('category', filterCategory);
+    }
+
+    if (filterType !== 'all') {
+      query = query.eq('idea_type', filterType);
+    }
+
+    if (searchTerm) {
+      query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,author_name.ilike.%${searchTerm}%`);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'newest':
+        query = query.order('created_at', { ascending: false });
+        break;
+      case 'oldest':
+        query = query.order('created_at', { ascending: true });
+        break;
+      case 'most_votes':
+        // This is a simplification - ideally we'd calculate total votes in the database
+        query = query.order('votes_up', { ascending: false });
+        break;
+      case 'trending':
+        // This is a simplification - ideally we'd have a trending algorithm in the database
+        query = query.order('created_at', { ascending: false });
+        break;
+      default:
+        query = query.order('created_at', { ascending: false });
+    }
+
+    // Apply pagination
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    // Execute the query
+    const { data, error, count } = await query;
 
     if (error) {
       console.error('Error fetching proposals:', error);
-      return [];
+      return { data: [], count: 0 };
     }
     
-    return data || [];
+    return { 
+      data: data || [], 
+      count: count || 0 
+    };
   } catch (error) {
     console.error('Error fetching proposals:', error);
-    return [];
+    return { data: [], count: 0 };
   }
 };
 
@@ -293,5 +369,24 @@ export const canEditProposal = async (proposalId: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error checking edit permissions:', error);
     return false;
+  }
+};
+
+export const getTotalProposalsCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('proposals')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['active', 'completed']);
+
+    if (error) {
+      console.error('Error getting total count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting total count:', error);
+    return 0;
   }
 };

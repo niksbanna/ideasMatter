@@ -25,9 +25,10 @@ import {
   Calendar,
   Tag,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Loader2
 } from 'lucide-react';
-import { getProposals, Proposal } from '../services/supabase';
+import { getProposals, Proposal, PaginationParams } from '../services/supabase';
 import { submitVote, getUserVote, toggleSave, isSaved } from '../services/interactions';
 import { isAuthenticated, getCurrentUser } from '../services/auth';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -53,89 +54,90 @@ export const Home: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [votingStates, setVotingStates] = useState<Record<string, boolean>>({});
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const authenticated = isAuthenticated();
   const currentUser = getCurrentUser();
 
   useEffect(() => {
-    loadFeed();
+    // Reset page when filters change
+    setPage(1);
+    setFeedItems([]);
+    loadFeed(1, true);
   }, [sortBy, filterBy, searchTerm]);
 
   useEffect(() => {
-    if (authenticated) {
+    if (authenticated && feedItems.length > 0) {
       loadUserInteractions();
     }
   }, [feedItems.length, authenticated]);
 
-  const loadFeed = async (pageNum = 1) => {
+  const loadFeed = async (pageNum = 1, resetItems = false) => {
     try {
-      setIsLoading(pageNum === 1);
-      const proposals = await getProposals();
-      
-      let filteredProposals = proposals.filter(proposal => {
-        const matchesSearch = !searchTerm || 
-          proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          proposal.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          proposal.author_name.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesFilter = filterBy === 'all' || 
-          (filterBy === 'proposals' && proposal.idea_type === 'proposal') ||
-          (filterBy === 'polls' && proposal.idea_type === 'poll') ||
-          proposal.category.toLowerCase() === filterBy;
-        
-        return matchesSearch && matchesFilter;
-      });
+      if (pageNum === 1) {
+        setIsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
 
-      // Calculate scores and sort
-      const itemsWithScores = filteredProposals.map(proposal => {
+      // Map our UI filter/sort options to API parameters
+      let apiSortBy = 'newest';
+      if (sortBy === 'hot') apiSortBy = 'trending';
+      else if (sortBy === 'new') apiSortBy = 'newest';
+      else if (sortBy === 'top') apiSortBy = 'most_votes';
+      else if (sortBy === 'rising') apiSortBy = 'trending';
+
+      let apiFilterCategory = 'all';
+      if (filterBy === 'civic') apiFilterCategory = 'Civic';
+      else if (filterBy === 'fun') apiFilterCategory = 'Fun';
+      else if (filterBy === 'tech') apiFilterCategory = 'Tech';
+      else if (filterBy === 'environment') apiFilterCategory = 'Environment';
+
+      let apiFilterType = 'all';
+      if (filterBy === 'proposals') apiFilterType = 'proposal';
+      else if (filterBy === 'polls') apiFilterType = 'poll';
+
+      const params: PaginationParams = {
+        page: pageNum,
+        pageSize: 10,
+        sortBy: apiSortBy,
+        filterCategory: apiFilterCategory,
+        filterType: apiFilterType,
+        filterStatus: 'active',
+        searchTerm: searchTerm
+      };
+
+      const { data: proposals, count } = await getProposals(params);
+      
+      // Calculate scores for display
+      const itemsWithScores = proposals.map(proposal => {
         const upVotes = (proposal.votes_up || 0) + (proposal.votes_yes || 0) + (proposal.likes || 0);
         const downVotes = (proposal.votes_down || 0) + (proposal.votes_no || 0);
         const totalVotes = upVotes + downVotes;
         const score = upVotes - downVotes;
-        const hoursOld = (Date.now() - new Date(proposal.created_at).getTime()) / (1000 * 60 * 60);
         
-        let hotScore = score;
-        if (sortBy === 'hot') {
-          hotScore = score / Math.pow(hoursOld + 2, 1.5); // Reddit-style hot algorithm
-        } else if (sortBy === 'rising') {
-          hotScore = totalVotes > 5 ? score / Math.pow(hoursOld + 1, 0.8) : 0;
-        }
-
         return {
           ...proposal,
           score,
-          totalVotes,
-          hotScore
+          totalVotes
         };
       });
 
-      // Sort based on selected option
-      itemsWithScores.sort((a, b) => {
-        switch (sortBy) {
-          case 'hot':
-            return b.hotScore - a.hotScore;
-          case 'new':
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-          case 'top':
-            return b.score - a.score;
-          case 'rising':
-            return b.hotScore - a.hotScore;
-          default:
-            return 0;
-        }
-      });
-
-      if (pageNum === 1) {
+      setTotalCount(count);
+      
+      if (resetItems) {
         setFeedItems(itemsWithScores);
       } else {
         setFeedItems(prev => [...prev, ...itemsWithScores]);
       }
       
-      setHasMore(itemsWithScores.length >= 20); // Assume more if we got a full page
+      setHasMore(itemsWithScores.length === 10 && feedItems.length + itemsWithScores.length < count);
     } catch (error) {
       console.error('Error loading feed:', error);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -184,7 +186,10 @@ export const Home: React.FC = () => {
       }));
 
       // Reload to get updated vote counts
-      setTimeout(() => loadFeed(), 500);
+      setTimeout(() => {
+        setPage(1);
+        loadFeed(1, true);
+      }, 500);
     } catch (error) {
       console.error('Error voting:', error);
     } finally {
@@ -244,7 +249,7 @@ export const Home: React.FC = () => {
   ];
 
   const filterOptions = [
-    { id: 'all', label: 'All', count: feedItems.length },
+    { id: 'all', label: 'All', count: totalCount },
     { id: 'proposals', label: 'Proposals', count: feedItems.filter(i => i.idea_type === 'proposal').length },
     { id: 'polls', label: 'Polls', count: feedItems.filter(i => i.idea_type === 'poll').length },
     { id: 'civic', label: 'Civic', count: feedItems.filter(i => i.category === 'Civic').length },
@@ -252,6 +257,12 @@ export const Home: React.FC = () => {
     { id: 'tech', label: 'Tech', count: feedItems.filter(i => i.category === 'Tech').length },
     { id: 'environment', label: 'Environment', count: feedItems.filter(i => i.category === 'Environment').length }
   ];
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadFeed(nextPage);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -600,14 +611,22 @@ export const Home: React.FC = () => {
             {hasMore && !isLoading && (
               <div className="text-center py-8">
                 <button
-                  onClick={() => {
-                    setPage(prev => prev + 1);
-                    loadFeed(page + 1);
-                  }}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 mx-auto"
                 >
-                  Load More Ideas
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    <span>Load More Ideas</span>
+                  )}
                 </button>
+                <p className="text-sm text-slate-500 mt-2">
+                  Showing {feedItems.length} of {totalCount} ideas
+                </p>
               </div>
             )}
 
@@ -656,7 +675,7 @@ export const Home: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Active Ideas</span>
-                  <span className="font-semibold text-slate-900">{feedItems.filter(i => i.status === 'active').length}</span>
+                  <span className="font-semibold text-slate-900">{totalCount}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Total Votes</span>

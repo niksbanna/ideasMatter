@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, TrendingUp, Clock, Users, ThumbsUp, MessageSquare, Eye, Calendar, Heart, CheckCircle, X, Flag } from 'lucide-react';
-import { getProposals, Proposal } from '../services/supabase';
+import { Search, Filter, TrendingUp, Clock, Users, ThumbsUp, MessageSquare, Eye, Calendar, Heart, CheckCircle, X, Flag, Loader2, ArrowRight } from 'lucide-react';
+import { getProposals, Proposal, PaginationParams } from '../services/supabase';
 import { ReportModal } from '../components/ReportModal';
 import { AuthModal } from '../components/AuthModal';
 import { isAuthenticated } from '../services/auth';
@@ -15,6 +15,10 @@ export const Explorer: React.FC = () => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Report modal state
   const [showReportModal, setShowReportModal] = useState(false);
@@ -53,20 +57,49 @@ export const Explorer: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadProposals();
-  }, []);
+    // Reset page when filters change
+    setPage(1);
+    setProposals([]);
+    loadProposals(1, true);
+  }, [filterStatus, filterCategory, filterType, sortBy, searchTerm]);
 
-  const loadProposals = async () => {
+  const loadProposals = async (pageNum = 1, resetItems = false) => {
     try {
-      setIsLoading(true);
+      if (pageNum === 1) {
+        setIsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+      
       setError(null);
-      const data = await getProposals();
-      setProposals(data);
+
+      const params: PaginationParams = {
+        page: pageNum,
+        pageSize: 10,
+        sortBy,
+        filterCategory,
+        filterType,
+        filterStatus,
+        searchTerm
+      };
+
+      const { data, count } = await getProposals(params);
+      
+      setTotalCount(count);
+      
+      if (resetItems) {
+        setProposals(data);
+      } else {
+        setProposals(prev => [...prev, ...data]);
+      }
+      
+      setHasMore(data.length === 10 && proposals.length + data.length < count);
     } catch (err) {
       setError('Failed to load ideas. Please try again later.');
       console.error('Error loading proposals:', err);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -128,35 +161,11 @@ export const Explorer: React.FC = () => {
     }
   };
 
-  const filteredProposals = proposals
-    .filter(proposal => {
-      const matchesSearch = proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           proposal.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           proposal.author_name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || proposal.status === filterStatus;
-      const matchesCategory = filterCategory === 'all' || proposal.category.toLowerCase() === filterCategory.toLowerCase();
-      const matchesType = filterType === 'all' || proposal.idea_type === filterType;
-      return matchesSearch && matchesStatus && matchesCategory && matchesType;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        case 'oldest':
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case 'most_votes':
-          const aVotes = (a.votes_up || 0) + (a.votes_yes || 0) + (a.likes || 0) - (a.votes_down || 0) - (a.votes_no || 0);
-          const bVotes = (b.votes_up || 0) + (b.votes_yes || 0) + (b.likes || 0) - (b.votes_down || 0) - (b.votes_no || 0);
-          return bVotes - aVotes;
-        case 'trending':
-          // Simple trending algorithm based on votes and recency
-          const aScore = ((a.votes_up || 0) + (a.votes_yes || 0) + (a.likes || 0) - (a.votes_down || 0) - (a.votes_no || 0)) / Math.max(1, Math.floor((Date.now() - new Date(a.created_at).getTime()) / (1000 * 60 * 60 * 24)));
-          const bScore = ((b.votes_up || 0) + (b.votes_yes || 0) + (b.likes || 0) - (b.votes_down || 0) - (b.votes_no || 0)) / Math.max(1, Math.floor((Date.now() - new Date(b.created_at).getTime()) / (1000 * 60 * 60 * 24)));
-          return bScore - aScore;
-        default:
-          return 0;
-      }
-    });
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadProposals(nextPage);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -215,7 +224,7 @@ export const Explorer: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && proposals.length === 0) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="text-center py-16">
@@ -226,7 +235,7 @@ export const Explorer: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && proposals.length === 0) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="text-center py-16">
@@ -236,7 +245,7 @@ export const Explorer: React.FC = () => {
             <p>{error}</p>
           </div>
           <button
-            onClick={loadProposals}
+            onClick={() => loadProposals(1, true)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Try Again
@@ -364,7 +373,7 @@ export const Explorer: React.FC = () => {
           </div>
 
           {/* Active Filters Display */}
-          {(filterCategory !== 'all' || filterType !== 'all' || searchTerm) && (
+          {(filterCategory !== 'all' || filterType !== 'all' || filterStatus !== 'all' || searchTerm) && (
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="text-sm text-slate-600">Active filters:</span>
               {searchTerm && (
@@ -391,13 +400,21 @@ export const Explorer: React.FC = () => {
                   </button>
                 </span>
               )}
+              {filterStatus !== 'all' && (
+                <span className="inline-flex items-center space-x-1 bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm">
+                  <span>Status: {filterStatus}</span>
+                  <button onClick={() => setFilterStatus('all')} className="hover:bg-orange-200 rounded-full p-0.5">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
             </div>
           )}
         </div>
 
         {/* Results */}
         <div className="space-y-6">
-          {filteredProposals.map((proposal) => (
+          {proposals.map((proposal) => (
             <div key={proposal.id} className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                 <div className="flex-1">
@@ -487,7 +504,33 @@ export const Explorer: React.FC = () => {
           ))}
         </div>
 
-        {filteredProposals.length === 0 && (
+        {/* Load More */}
+        {hasMore && !isLoading && (
+          <div className="text-center py-8">
+            <button
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 mx-auto"
+            >
+              {isLoadingMore ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading...</span>
+                </>
+              ) : (
+                <>
+                  <span>Load More Ideas</span>
+                  <ArrowRight className="h-5 w-5" />
+                </>
+              )}
+            </button>
+            <p className="text-sm text-slate-500 mt-2">
+              Showing {proposals.length} of {totalCount} ideas
+            </p>
+          </div>
+        )}
+
+        {proposals.length === 0 && !isLoading && (
           <div className="text-center py-16">
             <Users className="h-16 w-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No ideas found</h3>
@@ -508,7 +551,7 @@ export const Explorer: React.FC = () => {
               <h2 className="text-2xl font-bold mb-4">Community Impact</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
-                  <div className="text-3xl font-bold mb-2">{proposals.length}</div>
+                  <div className="text-3xl font-bold mb-2">{totalCount}</div>
                   <div className="text-blue-100">Total Ideas</div>
                 </div>
                 <div>
